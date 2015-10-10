@@ -16,8 +16,10 @@ module.exports = function (app) {
    * Copy files with the given glob `patterns` to the specified `dest`.
    *
    * ```js
-   * app.task('assets', function() {
-   *   app.copy('assets/**', 'dist/');
+   * app.task('assets', function(cb) {
+   *   app.copy('assets/**', 'dist/')
+   *     .on('error', cb)
+   *     .on('finish', cb)
    * });
    * ```
    * @name .copy
