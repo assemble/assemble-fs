@@ -5,7 +5,8 @@ var statSpy = spies.statSpy;
 require('mocha');
 var should = require('should');
 var assert = require('assert');
-var App = require('..');
+var App = require('templates');
+var afs = require('..');
 var app;
 
 var path = require('path');
@@ -22,6 +23,8 @@ var outpath = path.join(__dirname, './out-fixtures');
 
 var wipeOut = function(cb) {
   app = new App();
+  app.use(afs);
+
   rimraf(path.join(__dirname, './out-fixtures/'), cb);
   spies.setError('false');
   statSpy.reset();

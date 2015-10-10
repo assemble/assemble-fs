@@ -2,7 +2,7 @@ require('mocha');
 var path = require('path');
 var assert = require('assert');
 var rimraf = require('rimraf');
-var assemble = require('assemble');
+var App = require('templates');
 var afs = require('..');
 var app;
 
@@ -12,7 +12,7 @@ var outpath = path.join(__dirname, 'out-fixtures');
 describe('copy()', function() {
   beforeEach(function (done) {
     rimraf(outpath, done);
-    app = assemble();
+    app = new App();
     app.use(afs);
   });
 
