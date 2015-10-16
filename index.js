@@ -30,7 +30,6 @@ module.exports = function(app) {
  */
 
 function plugin(app) {
-  var vfs = utils.vfs;
 
   /**
    * Copy files with the given glob `patterns` to the specified `dest`.
@@ -50,8 +49,8 @@ function plugin(app) {
    */
 
   app.mixin('copy', function (patterns, dest, options) {
-    return vfs.src(patterns, options)
-      .pipe(vfs.dest(dest, options))
+    return utils.vfs.src(patterns, options)
+      .pipe(utils.vfs.dest(dest, options))
       .on('data', function () {});
   });
 
@@ -68,7 +67,7 @@ function plugin(app) {
    */
 
   app.mixin('src', function() {
-    return vfs.src.apply(vfs, arguments)
+    return utils.vfs.src.apply(utils.vfs, arguments)
       .pipe(toCollection(this));
   });
 
@@ -84,7 +83,7 @@ function plugin(app) {
    */
 
   app.mixin('symlink', function () {
-    return vfs.symlink.apply(vfs, arguments);
+    return utils.vfs.symlink.apply(utils.vfs, arguments);
   });
 
   /**
@@ -103,7 +102,7 @@ function plugin(app) {
     if (!dir) {
       throw new TypeError('expected dest to be a string or function.');
     }
-    return vfs.dest.apply(vfs, arguments);
+    return utils.vfs.dest.apply(utils.vfs, arguments);
   });
 }
 
