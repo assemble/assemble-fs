@@ -4,15 +4,17 @@
  * Lazily required module dependencies
  */
 
-var lazy = require('lazy-cache')(require);
+var utils = require('lazy-cache')(require);
 var fn = require;
 
-require = lazy;
+require = utils;
+require('src-stream', 'src');
+require('through2', 'through');
 require('vinyl-fs', 'vfs');
 require = fn;
 
 /**
- * Expose `lazy`
+ * Expose `utils`
  */
 
-module.exports = lazy;
+module.exports = utils;
