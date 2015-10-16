@@ -9,7 +9,27 @@
 
 var utils = require('./utils');
 
-module.exports = function (app) {
+/**
+ * Support using the plugin on `app` or a
+ * `collection` instance
+ */
+
+module.exports = function(app) {
+  plugin(app);
+
+  return function(collection) {
+    plugin(collection);
+
+    return;
+  };
+};
+
+
+/**
+ * The actual `fs` plugin
+ */
+
+function plugin(app) {
   var vfs = utils.vfs;
 
   /**
@@ -47,7 +67,10 @@ module.exports = function (app) {
    * @api public
    */
 
-  app.mixin('src', vfs.src.bind(vfs));
+  app.mixin('src', function() {
+    return vfs.src.apply(vfs, arguments)
+      .pipe(toCollection(this));
+  });
 
   /**
    * Glob patterns or paths for symlinks.
@@ -60,7 +83,9 @@ module.exports = function (app) {
    * @api public
    */
 
-  app.mixin('symlink', vfs.symlink.bind(vfs));
+  app.mixin('symlink', function () {
+    return vfs.symlink.apply(vfs, arguments);
+  });
 
   /**
    * Specify a destination for processed files.
@@ -80,4 +105,43 @@ module.exports = function (app) {
     }
     return vfs.dest.apply(vfs, arguments);
   });
-};
+}
+
+/**
+ * Push vinyl files into a collection or list.
+ */
+
+function toCollection(app, name) {
+  var through = utils.through.obj;
+  name = name || 'files';
+  app[name] = [];
+
+  var collection, item, view;
+  if (app.isApp) {
+    collection = app.collection();
+  }
+
+  var stream = through(function (file, enc, next) {
+    app[name].push(file);
+
+    if (app.isApp) {
+      item = collection.setView(file.path, file);
+      return next(null, item);
+    }
+
+    if (app.isCollection) {
+      view = app.setView(file.path, file);
+      return next(null, view);
+    }
+
+    if (app.isList) {
+      item = app.setItem(file.path, file);
+      return next(null, item);
+    }
+
+    next(null, file);
+  });
+
+  app.stream = utils.src(stream);
+  return stream;
+}
