@@ -36,6 +36,19 @@ describe('src()', function() {
     });
   });
 
+  it('should add src files to a `files` array', function (done) {
+    var patterns = path.join(__dirname, 'fixtures/*.coffee');
+    var stream = app.src(patterns);
+    stream.on('error', done);
+    stream.on('data', function (file) {
+      assert(app.files);
+      assert(app.files.length === 1);
+    });
+    stream.on('end', function () {
+      done();
+    });
+  });
+
   it('should return an input stream for multiple globs', function (done) {
     var globArray = [
       path.join(__dirname, 'fixtures/generic/run.dmc'),
