@@ -7,6 +7,8 @@
 
 'use strict';
 
+var path = require('path');
+var async = require('async');
 var utils = require('./utils');
 
 /**
@@ -14,22 +16,74 @@ var utils = require('./utils');
  * `collection` instance
  */
 
-module.exports = function(app) {
-  plugin(app);
+module.exports = function(options) {
+  return function fn(app) {
+    vfs(app);
+    writeFile(app, options);
 
-  return function(collection) {
-    plugin(collection);
+    if (app.isViews) {
+      app.mixin('writeFiles', writeFiles);
+    }
 
-    return;
+    if (app.isApp) {
+      return fn;
+    }
+
+    if (app.isViews || app.isList) {
+      return writeFile;
+    }
   };
-};
+}
 
+function writeFile(app, options) {
+  app.mixin('writeFile', writer(options));
+
+  function writer(options) {
+    options = options || {};
+
+    return function(dest, file, cb) {
+      if (this.isView) {
+        cb = file;
+        file = this;
+      }
+
+      if (typeof cb !== 'function') {
+        throw new TypeError('expected callback to be a function');
+      }
+      if (typeof dest !== 'string') {
+        return cb(new TypeError('expected dest to be a string'));
+      }
+
+      var content = file;
+      if (file && typeof file === 'object') {
+        content = file.contents.toString();
+      }
+      if (typeof content !== 'string') {
+        return cb(new TypeError('expected "file.contents" to be a buffer or string'));
+      }
+      utils.writeFile(dest, content, cb);
+      return this;
+    }
+  };
+}
+
+function writeFiles(dest, cb) {
+  async.eachOf(this.views, function(view, key, next) {
+    var filepath;
+    if (typeof dest === 'function') {
+      filepath = dest(view);
+    } else {
+      filepath = path.join(dest, view.basename);
+    }
+    view.writeFile(filepath, next);
+  }, cb);
+}
 
 /**
  * The actual `fs` plugin
  */
 
-function plugin(app) {
+function vfs(app) {
 
   /**
    * Copy files with the given glob `patterns` to the specified `dest`.

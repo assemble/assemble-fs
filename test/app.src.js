@@ -10,7 +10,7 @@ var app;
 describe('src()', function() {
   beforeEach(function () {
     app = new App();
-    app.use(afs);
+    app.use(afs());
   });
 
   it('should return a stream', function (done) {

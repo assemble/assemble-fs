@@ -21,33 +21,42 @@
     "test": "mocha"
   },
   "dependencies": {
-    "lazy-cache": "^0.2.3",
+    "async": "^1.5.0",
+    "lazy-cache": "^0.2.4",
     "src-stream": "^0.1.1",
     "through2": "^2.0.0",
-    "vinyl-fs": "^2.1.1"
+    "vinyl-fs": "^2.2.1",
+    "write": "^0.2.1"
   },
   "devDependencies": {
     "buffer-equal": "0.0.1",
     "graceful-fs": "^4.1.2",
-    "mocha": "*",
-    "rimraf": "^2.4.3",
-    "should": "*",
-    "sinon": "^1.17.1",
-    "templates": "^0.3.6",
-    "vinyl": "^1.0.0"
+    "mocha": "^2.3.4",
+    "rimraf": "^2.4.4",
+    "should": "^7.1.1",
+    "sinon": "^1.17.2",
+    "templates": "^0.5.0",
+    "vinyl": "^1.1.0"
   },
   "keywords": [
     "assemble",
     "assembleplugin",
+    "dest",
     "file",
+    "files",
     "fs",
+    "glob",
+    "read",
+    "src",
     "system",
-    "vinyl"
+    "vinyl",
+    "write"
   ],
   "verb": {
     "related": {
       "list": [
         "assemble",
+        "assemble-core",
         "assemble-loader",
         "assemble-streams",
         "assemble-render-file"

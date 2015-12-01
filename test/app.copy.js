@@ -13,7 +13,7 @@ describe('copy()', function() {
   beforeEach(function (done) {
     rimraf(outpath, done);
     app = new App();
-    app.use(afs);
+    app.use(afs());
   });
 
   afterEach(function (done) {
