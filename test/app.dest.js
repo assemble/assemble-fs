@@ -22,7 +22,7 @@ var outpath = path.join(__dirname, './out-fixtures');
 
 var wipeOut = function (cb) {
   app = new App();
-  app.use(afs);
+  app.use(afs());
 
   rimraf(path.join(__dirname, './out-fixtures/'), cb);
   spies.setError('false');
@@ -960,7 +960,7 @@ describe('dest', function () {
   beforeEach(function (done) {
     rimraf(outpath, done);
     app = new App();
-    app.use(afs);
+    app.use(afs());
   });
 
   afterEach(function (done) {

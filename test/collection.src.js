@@ -9,7 +9,7 @@ var app, pages, posts;
 describe('collection.src()', function() {
   beforeEach(function () {
     app = new App();
-    app.use(require('..'));
+    app.use(require('..')());
 
     pages = app.create('pages');
     posts = app.create('posts');

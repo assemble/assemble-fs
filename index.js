@@ -14,16 +14,17 @@ var utils = require('./utils');
  * `collection` instance
  */
 
-module.exports = function(app) {
-  plugin(app);
+module.exports = function() {
+  return function(app) {
+    plugin(app);
 
-  return function(collection) {
-    plugin(collection);
+    return function(collection) {
+      plugin(collection);
 
-    return;
+      return;
+    };
   };
 };
-
 
 /**
  * The actual `fs` plugin
