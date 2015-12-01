@@ -21,10 +21,10 @@
     "test": "mocha"
   },
   "dependencies": {
-    "lazy-cache": "^0.2.3",
+    "lazy-cache": "^0.2.4",
     "src-stream": "^0.1.1",
     "through2": "^2.0.0",
-    "vinyl-fs": "^2.1.1"
+    "vinyl-fs": "^2.2.1"
   },
   "devDependencies": {
     "buffer-equal": "0.0.1",
