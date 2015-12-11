@@ -16,12 +16,9 @@ var utils = require('./utils');
 
 module.exports = function() {
   return function(app) {
-    plugin(app);
-
+    plugin.call(app, app);
     return function(collection) {
-      plugin(collection);
-
-      return;
+      plugin.call(collection, collection);
     };
   };
 };
@@ -31,6 +28,12 @@ module.exports = function() {
  */
 
 function plugin(app) {
+  // we'll assume none of them exist if `onStream` is not registered
+  if (typeof this.onStream !== 'function') {
+    this.handler('onStream');
+    this.handler('preWrite');
+    this.handler('postWrite');
+  }
 
   /**
    * Copy files with the given glob `patterns` to the specified `dest`.
@@ -69,7 +72,8 @@ function plugin(app) {
 
   app.mixin('src', function() {
     return utils.vfs.src.apply(utils.vfs, arguments)
-      .pipe(toCollection(this));
+      .pipe(toCollection(this))
+      .pipe(handle('onStream'));
   });
 
   /**
@@ -84,7 +88,9 @@ function plugin(app) {
    */
 
   app.mixin('symlink', function () {
-    return utils.vfs.symlink.apply(utils.vfs, arguments);
+    return utils.vfs.symlink.apply(utils.vfs, arguments)
+      .pipe(toCollection(this))
+      .pipe(handle('onStream'));
   });
 
   /**
@@ -103,42 +109,41 @@ function plugin(app) {
     if (!dir) {
       throw new TypeError('expected dest to be a string or function.');
     }
-    return utils.vfs.dest.apply(utils.vfs, arguments);
+    return handle('preWrite')
+      .pipe(utils.vfs.dest.apply(utils.vfs, arguments));
   });
+
+  function handle(stage) {
+    return utils.through.obj(function(file, enc, next) {
+      if (file.isNull()) return next();
+      app.handle(stage, file, next);
+    });
+  }
 }
 
 /**
  * Push vinyl files into a collection or list.
  */
 
-function toCollection(app, name) {
+function toCollection(app) {
   var through = utils.through.obj;
-  name = name || 'files';
-  app[name] = [];
+  app.streamFiles = [];
 
-  var collection, item, view;
+  var collection;
   if (app.isApp) {
     collection = app.collection();
   }
 
-  var stream = through(function (file, enc, next) {
-    app[name].push(file);
-
+  var stream = through(function(file, enc, next) {
     if (app.isApp) {
-      item = collection.setView(file.path, file);
-      return next(null, item);
+      file = collection.setView(file.path, file);
+    } else if (app.isCollection) {
+      file = app.setView(file.path, file);
+    } else if (app.isList) {
+      file = app.setItem(file.path, file);
     }
 
-    if (app.isCollection) {
-      view = app.setView(file.path, file);
-      return next(null, view);
-    }
-
-    if (app.isList) {
-      item = app.setItem(file.path, file);
-      return next(null, item);
-    }
-
+    app.streamFiles.push(file);
     next(null, file);
   });
 

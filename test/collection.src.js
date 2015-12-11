@@ -4,12 +4,13 @@ var path = require('path');
 var assert = require('assert');
 var should = require('should');
 var App = require('templates');
+var fs = require('..');
 var app, pages, posts;
 
 describe('collection.src()', function() {
   beforeEach(function () {
     app = new App();
-    app.use(require('..')());
+    app.use(fs());
 
     pages = app.create('pages');
     posts = app.create('posts');
@@ -35,13 +36,13 @@ describe('collection.src()', function() {
     });
   });
 
-  it('should add src files to a `files` array', function (done) {
+  it('should add src files to the `streamFiles` array', function (done) {
     var patterns = path.join(__dirname, 'fixtures/*.coffee');
     var stream = pages.src(patterns);
     stream.on('error', done);
     stream.on('data', function (file) {
-      assert(pages.files);
-      assert(pages.files.length === 1);
+      assert(pages.streamFiles);
+      assert(pages.streamFiles.length === 1);
     });
     stream.on('end', function () {
       done();

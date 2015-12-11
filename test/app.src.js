@@ -36,13 +36,13 @@ describe('src()', function() {
     });
   });
 
-  it('should add src files to a `files` array', function (done) {
+  it('should add src files to the `streamFiles` array', function (done) {
     var patterns = path.join(__dirname, 'fixtures/*.coffee');
     var stream = app.src(patterns);
     stream.on('error', done);
     stream.on('data', function (file) {
-      assert(app.files);
-      assert(app.files.length === 1);
+      assert(app.streamFiles);
+      assert(app.streamFiles.length === 1);
     });
     stream.on('end', function () {
       done();
