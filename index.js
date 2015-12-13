@@ -15,9 +15,9 @@ var utils = require('./utils');
 
 module.exports = function() {
   return function(app) {
-    plugin(app);
+    plugin.call(app, app);
     return function(collection) {
-      plugin(collection);
+      plugin.call(collection, collection);
     };
   };
 };
@@ -72,8 +72,8 @@ function plugin(app) {
 
   app.mixin('src', function() {
     return vfs.src.apply(vfs, arguments)
-      .pipe(toCollection(app))
-      .pipe(handle(app, 'onStream'))
+      .pipe(toCollection(this))
+      .pipe(handle(this, 'onStream'))
   });
 
   /**
@@ -107,7 +107,7 @@ function plugin(app) {
     if (!dir) {
       throw new TypeError('expected dest to be a string or function.');
     }
-    return handle(app, 'preWrite')
+    return handle(this, 'preWrite')
       .pipe(vfs.dest.apply(vfs, arguments))
   });
 }

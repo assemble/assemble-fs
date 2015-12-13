@@ -26,28 +26,23 @@ describe('collection.src()', function() {
 
   it('should convert vinyl files to views', function(cb) {
     var patterns = path.join(__dirname, 'fixtures/*.coffee');
-    var stream = pages.src(patterns);
-    stream.on('error', cb);
-    stream.on('data', function(file) {
-      assert(file.isView);
-    });
-    stream.on('end', function() {
-      cb();
-    });
+    pages.src(patterns)
+      .on('error', cb)
+      .on('data', function(file) {
+        assert(file.isView);
+      })
+      .on('end', cb);
   });
 
-  it.only('should add src files to the collection', function(cb) {
+  it('should add src files to the collection', function(cb) {
     var patterns = path.join(__dirname, 'fixtures/*.coffee');
     pages.src(patterns)
       .on('error', cb)
       .on('data', function(file) {
-        // assert(pages.views);
-        console.log(pages)
-        // assert(Object.keys(pages.views).length === 1);
+        assert(pages.views);
+        assert(Object.keys(pages.views).length === 1);
       })
-      .on('end', function() {
-        cb();
-      });
+      .on('end', cb);
   });
 
   it('should work with views added with other methods', function(cb) {
@@ -281,14 +276,6 @@ describe('collection.src()', function() {
     stream.on('end', function() {
       cb();
     });
-  });
-
-  it.skip('should throw an error when buffer is false', function(cb) {
-    pages.src(path.join(__dirname, 'fixtures/*.coffee'), {buffer: false})
-      .on('error', cb)
-      .on('data', function() {
-        cb(new Error('should have thrown an error'));
-      });
   });
 
   it('should return an input stream from a deep glob', function(cb) {
