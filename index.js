@@ -10,15 +10,14 @@
 var utils = require('./utils');
 
 /**
- * Support using the plugin on `app` or a
- * `collection` instance
+ * Plugin is registered on `app` and `collection` instances
  */
 
 module.exports = function() {
   return function(app) {
-    plugin.call(app, app);
+    plugin(app);
     return function(collection) {
-      plugin.call(collection, collection);
+      plugin(collection);
     };
   };
 };
@@ -28,11 +27,13 @@ module.exports = function() {
  */
 
 function plugin(app) {
-  // we'll assume none of them exist if `onStream` is not registered
-  if (typeof this.onStream !== 'function') {
-    this.handler('onStream');
-    this.handler('preWrite');
-    this.handler('postWrite');
+  var vfs = utils.vfs;
+
+  // assume none of the handlers exist if `onStream` does not exist
+  if (typeof app.handler === 'function' && typeof app.onStream !== 'function') {
+    app.handler('onStream');
+    app.handler('preWrite');
+    app.handler('postWrite');
   }
 
   /**
@@ -52,10 +53,9 @@ function plugin(app) {
    * @api public
    */
 
-  app.mixin('copy', function (patterns, dest, options) {
-    return utils.vfs.src(patterns, options)
-      .pipe(utils.vfs.dest(dest, options))
-      .on('data', function () {});
+  app.mixin('copy', function(patterns, dest, options) {
+    return this.src(patterns, options)
+      .pipe(this.dest(dest, options))
   });
 
   /**
@@ -71,9 +71,9 @@ function plugin(app) {
    */
 
   app.mixin('src', function() {
-    return utils.vfs.src.apply(utils.vfs, arguments)
-      .pipe(toCollection(this))
-      .pipe(handle('onStream'));
+    return vfs.src.apply(vfs, arguments)
+      .pipe(toCollection(app))
+      .pipe(handle(app, 'onStream'))
   });
 
   /**
@@ -87,10 +87,8 @@ function plugin(app) {
    * @api public
    */
 
-  app.mixin('symlink', function () {
-    return utils.vfs.symlink.apply(utils.vfs, arguments)
-      .pipe(toCollection(this))
-      .pipe(handle('onStream'));
+  app.mixin('symlink', function() {
+    return vfs.symlink.apply(vfs, arguments);
   });
 
   /**
@@ -105,46 +103,63 @@ function plugin(app) {
    * @api public
    */
 
-  app.mixin('dest', function (dir) {
+  app.mixin('dest', function(dir) {
     if (!dir) {
       throw new TypeError('expected dest to be a string or function.');
     }
-    return handle('preWrite')
-      .pipe(utils.vfs.dest.apply(utils.vfs, arguments));
+    return handle(app, 'preWrite')
+      .pipe(vfs.dest.apply(vfs, arguments))
   });
+}
 
-  function handle(stage) {
-    return utils.through.obj(function(file, enc, next) {
-      if (file.isNull()) return next();
-      app.handle(stage, file, next);
-    });
-  }
+/**
+ * Plugin for handling middleware
+ *
+ * @param {Object} `app` Instance of "app" (assemble, verb, etc) or a collection
+ * @param {String} `stage` the middleware stage to run
+ */
+
+function handle(app, stage) {
+  return utils.through.obj(function(file, enc, next) {
+    if (typeof app.handle !== 'function') {
+      return next(null, file);
+    }
+    if (typeof file.options === 'undefined') {
+      return next(null, file);
+    }
+    if (file.isNull()) return next();
+    app.handle(stage, file, next);
+  });
 }
 
 /**
  * Push vinyl files into a collection or list.
  */
 
-function toCollection(app) {
-  var through = utils.through.obj;
-  app.streamFiles = [];
+function toCollection(app, name) {
+  name = name || 'streamFiles';
+  var collection, view;
 
-  var collection;
   if (app.isApp) {
-    collection = app.collection();
+    collection = app[name] || app.create(name);
   }
 
-  var stream = through(function(file, enc, next) {
-    if (app.isApp) {
-      file = collection.setView(file.path, file);
-    } else if (app.isCollection) {
-      file = app.setView(file.path, file);
-    } else if (app.isList) {
-      file = app.setItem(file.path, file);
+  var stream = utils.through.obj(function(file, enc, next) {
+    if (file.isNull()) {
+      return next();
     }
 
-    app.streamFiles.push(file);
-    next(null, file);
+    if (app.isApp) {
+      view = collection.setView(file.path, file);
+    } else if (app.isCollection || app.isViews) {
+      view = app.setView(file.path, file);
+    } else if (app.isList) {
+      view = app.setItem(file.path, file);
+    } else {
+      return next(new Error('assemble-fs expects an instance, collection or view'));
+    }
+
+    next(null, view);
   });
 
   app.stream = utils.src(stream);
