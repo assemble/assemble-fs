@@ -70,9 +70,9 @@ function plugin(app) {
    * @api public
    */
 
-  app.mixin('src', function() {
+  app.mixin('src', function(glob, options) {
     return vfs.src.apply(vfs, arguments)
-      .pipe(toCollection(this))
+      .pipe(toCollection(this, options))
       .pipe(handle(this, 'onStream'))
   });
 
@@ -136,8 +136,9 @@ function handle(app, stage) {
  * Push vinyl files into a collection or list.
  */
 
-function toCollection(app, name) {
-  name = name || 'streamFiles';
+function toCollection(app, options) {
+  options = options || {};
+  var name = options.collectionName || 'streamFiles';
   var collection, view;
 
   if (app.isApp) {
@@ -162,6 +163,6 @@ function toCollection(app, name) {
     next(null, view);
   });
 
-  app.stream = utils.src(stream);
+  app.stream = stream;
   return stream;
 }
