@@ -1,7 +1,7 @@
 {
   "name": "assemble-fs",
   "description": "Assemble plugin to add methods to assemble for working with the file system, like src, dest, copy and symlink.",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "homepage": "https://github.com/jonschlinkert/assemble-fs",
   "author": "Jon Schlinkert (https://github.com/jonschlinkert)",
   "repository": "jonschlinkert/assemble-fs",
@@ -21,18 +21,20 @@
     "test": "mocha"
   },
   "dependencies": {
-    "lazy-cache": "^1.0.2",
+    "extend-shallow": "^2.0.1",
+    "lazy-cache": "^1.0.3",
     "through2": "^2.0.0",
     "vinyl-fs": "^2.2.1"
   },
   "devDependencies": {
     "buffer-equal": "0.0.1",
     "graceful-fs": "^4.1.2",
+    "gulp-format-md": "^0.1.4",
     "mocha": "^2.3.4",
-    "rimraf": "^2.4.4",
-    "should": "^8.0.1",
+    "rimraf": "^2.5.0",
+    "should": "^8.0.2",
     "sinon": "^1.17.2",
-    "templates": "^0.8.1",
+    "templates": "^0.9.2",
     "vinyl": "^1.1.0"
   },
   "keywords": [
