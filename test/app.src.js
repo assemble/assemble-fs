@@ -25,9 +25,9 @@ describe('src()', function() {
     var stream = app.src(path.join(__dirname, 'fixtures/*.coffee'));
     stream.on('error', cb);
     stream.on('data', function(file) {
-      should.exist(file);
-      should.exist(file.path);
-      should.exist(file.contents);
+      assert(file);
+      assert(file.path);
+      assert(file.contents);
       path.join(file.path, '').should.equal(path.join(__dirname, 'fixtures/test.coffee'));
       String(file.contents).should.equal('Hello world!');
     });
@@ -44,8 +44,8 @@ describe('src()', function() {
     var files = [];
     stream.on('error', cb);
     stream.on('data', function(file) {
-      should.exist(file);
-      should.exist(file.path);
+      assert(file);
+      assert(file.path);
       files.push(file);
     });
     stream.on('end', function() {
@@ -67,8 +67,8 @@ describe('src()', function() {
     var files = [];
     stream.on('error', cb);
     stream.on('data', function(file) {
-      should.exist(file);
-      should.exist(file.path);
+      assert(file);
+      assert(file.path);
       files.push(file);
     });
     stream.on('end', function() {
@@ -79,24 +79,31 @@ describe('src()', function() {
   });
 
   it('should return an input stream with no contents when read is false', function(cb) {
-    var stream = app.src(path.join(__dirname, 'fixtures/*.coffee'), {read: false});
-    stream.on('error', cb);
-    stream.on('data', function(file) {
-      should.exist(file);
-      should.exist(file.path);
-      should.not.exist(file.contents);
-      path.join(file.path, '').should.equal(path.join(__dirname, 'fixtures/test.coffee'));
-    });
-    stream.on('end', cb);
+    app.src(path.join(__dirname, 'fixtures/*.coffee'), {read: false})
+      .on('error', cb)
+      .on('data', function(file) {
+        assert(file);
+        assert(file.path);
+        assert(!file.contents);
+        path.join(file.path, '').should.equal(path.join(__dirname, 'fixtures/test.coffee'));
+      })
+      .on('end', cb)
+  });
+
+  it('should not blow up when no files are matched', function(cb) {
+    app.src(['test.js', 'foo/*.js'])
+      .on('error', cb)
+      .on('data', function() {})
+      .on('end', cb)
   });
 
   it('should return an input stream with contents as stream when buffer is false', function(cb) {
     var stream = app.src(path.join(__dirname, 'fixtures/*.coffee'), {buffer: false});
     stream.on('error', cb);
     stream.on('data', function(file) {
-      should.exist(file);
-      should.exist(file.path);
-      should.exist(file.contents);
+      assert(file);
+      assert(file.path);
+      assert(file.contents);
       var buf = '';
       file.contents.on('data', function(d) {
         buf += d;
@@ -113,9 +120,9 @@ describe('src()', function() {
     var stream = app.src(path.join(__dirname, 'fixtures/**/*.jade'));
     stream.on('error', cb);
     stream.on('data', function(file) {
-      should.exist(file);
-      should.exist(file.path);
-      should.exist(file.contents);
+      assert(file);
+      assert(file.path);
+      assert(file.contents);
       path.join(file.path, '').should.equal(path.join(__dirname, 'fixtures/test/run.jade'));
       String(file.contents).should.equal('test template');
     });
@@ -141,9 +148,9 @@ describe('src()', function() {
     stream.on('error', cb);
     stream.on('data', function(file) {
       ++a;
-      should.exist(file);
-      should.exist(file.path);
-      should.exist(file.contents);
+      assert(file);
+      assert(file.path);
+      assert(file.contents);
       path.join(file.path, '').should.equal(path.join(__dirname, 'fixtures/test.coffee'));
       String(file.contents).should.equal('Hello world!');
     });
@@ -155,8 +162,8 @@ describe('src()', function() {
 
   it('should return a stream', function(cb) {
     var stream = app.src(path.join(__dirname, 'fixtures/*.coffee'));
-    should.exist(stream);
-    should.exist(stream.on);
+    assert(stream);
+    assert(stream.on);
     cb();
   });
 
@@ -164,9 +171,9 @@ describe('src()', function() {
     var stream = app.src(path.join(__dirname, 'fixtures/*.coffee'));
     stream.on('error', cb);
     stream.on('data', function(file) {
-      should.exist(file);
-      should.exist(file.path);
-      should.exist(file.contents);
+      assert(file);
+      assert(file.path);
+      assert(file.contents);
       path.join(file.path, '').should.equal(path.join(__dirname, 'fixtures/test.coffee'));
       String(file.contents).should.equal('Hello world!');
     });
@@ -183,8 +190,8 @@ describe('src()', function() {
     var files = [];
     stream.on('error', cb);
     stream.on('data', function(file) {
-      should.exist(file);
-      should.exist(file.path);
+      assert(file);
+      assert(file.path);
       files.push(file);
     });
     stream.on('end', function() {
@@ -206,8 +213,8 @@ describe('src()', function() {
     var files = [];
     stream.on('error', cb);
     stream.on('data', function(file) {
-      should.exist(file);
-      should.exist(file.path);
+      assert(file);
+      assert(file.path);
       files.push(file);
     });
     stream.on('end', function() {
@@ -221,9 +228,9 @@ describe('src()', function() {
     var stream = app.src(path.join(__dirname, 'fixtures/*.coffee'), {read: false});
     stream.on('error', cb);
     stream.on('data', function(file) {
-      should.exist(file);
-      should.exist(file.path);
-      should.not.exist(file.contents);
+      assert(file);
+      assert(file.path);
+      assert(!file.contents);
       path.join(file.path, '').should.equal(path.join(__dirname, 'fixtures/test.coffee'));
     });
     stream.on('end', cb);
@@ -233,9 +240,9 @@ describe('src()', function() {
     app.src(path.join(__dirname, 'fixtures/**/*.jade'))
       .on('error', cb)
       .on('data', function(file) {
-        should.exist(file);
-        should.exist(file.path);
-        should.exist(file.contents);
+        assert(file);
+        assert(file.path);
+        assert(file.contents);
         path.join(file.path, '').should.equal(path.join(__dirname, 'fixtures/test/run.jade'));
         String(file.contents).should.equal('test template');
       })
@@ -263,9 +270,9 @@ describe('src()', function() {
     stream.on('error', cb);
     stream.on('data', function(file) {
       ++a;
-      should.exist(file);
-      should.exist(file.path);
-      should.exist(file.contents);
+      assert(file);
+      assert(file.path);
+      assert(file.contents);
       path.join(file.path, '').should.equal(path.join(__dirname, 'fixtures/test.coffee'));
       String(file.contents).should.equal('Hello world!');
     });
