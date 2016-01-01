@@ -229,16 +229,6 @@ describe('src()', function() {
     stream.on('end', cb);
   });
 
-  it.skip('should throw an error when buffer is false', function(cb) {
-    app.src(path.join(__dirname, 'fixtures/*.coffee'), {buffer: false})
-      .on('error', function() {
-        cb();
-      })
-      .on('data', function() {
-        cb(new Error('should have thrown an error'));
-      });
-  });
-
   it('should return an input stream from a deep glob', function(cb) {
     app.src(path.join(__dirname, 'fixtures/**/*.jade'))
       .on('error', cb)

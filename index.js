@@ -71,8 +71,9 @@ function plugin(app) {
    */
 
   app.mixin('src', function(glob, options) {
-    return vfs.src.apply(vfs, arguments)
-      .pipe(toCollection(this, options))
+    var opts = utils.extend({ allowEmpty: true }, options);
+    return vfs.src(glob, opts)
+      .pipe(toCollection(this, opts))
       .pipe(handle(this, 'onStream'))
   });
 

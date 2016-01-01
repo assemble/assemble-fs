@@ -8,6 +8,7 @@ var utils = require('lazy-cache')(require);
 var fn = require;
 
 require = utils;
+require('extend-shallow', 'extend');
 require('through2', 'through');
 require('vinyl-fs', 'vfs');
 require = fn;
