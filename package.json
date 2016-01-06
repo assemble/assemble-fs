@@ -1,12 +1,12 @@
 {
   "name": "assemble-fs",
   "description": "Assemble plugin to add methods to assemble for working with the file system, like src, dest, copy and symlink.",
-  "version": "0.3.3",
-  "homepage": "https://github.com/jonschlinkert/assemble-fs",
+  "version": "0.3.4",
+  "homepage": "https://github.com/assemble/assemble-fs",
   "author": "Jon Schlinkert (https://github.com/jonschlinkert)",
-  "repository": "jonschlinkert/assemble-fs",
+  "repository": "assemble/assemble-fs",
   "bugs": {
-    "url": "https://github.com/jonschlinkert/assemble-fs/issues"
+    "url": "https://github.com/assemble/assemble-fs/issues"
   },
   "license": "MIT",
   "files": [
