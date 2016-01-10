@@ -108,8 +108,13 @@ function plugin(app) {
     if (!dir) {
       throw new TypeError('expected dest to be a string or function.');
     }
-    return handle(this, 'preWrite')
-      .pipe(vfs.dest.apply(vfs, arguments))
+    var output = utils.combine([
+      handle(this, 'preWrite'),
+      vfs.dest.apply(vfs, arguments),
+      handle(this, 'postWrite')
+    ]);
+    output.on('end', output.emit.bind(output, 'finish'));
+    return output;
   });
 }
 

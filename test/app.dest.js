@@ -954,6 +954,26 @@ describe('dest stream', function () {
     stream.write(file);
     stream.end();
   });
+
+  it('should emit end event', function (done) {
+    var srcPath = path.join(__dirname, './fixtures/vinyl/test.coffee');
+    var stream = app.dest('./out-fixtures/', {
+      cwd: __dirname
+    });
+
+    stream.once('end', function () {
+      done();
+    });
+
+    var file = new File({
+      path: srcPath,
+      cwd: __dirname,
+      contents: new Buffer("1234567890")
+    });
+
+    stream.write(file);
+    stream.end();
+  });
 });
 
 describe('dest', function () {
