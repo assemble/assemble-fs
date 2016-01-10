@@ -31,9 +31,9 @@
     "buffer-equal": "0.0.1",
     "graceful-fs": "^4.1.2",
     "gulp-format-md": "^0.1.4",
-    "mocha": "^2.3.4",
+    "mocha": "*",
     "rimraf": "^2.5.0",
-    "should": "^8.0.2",
+    "should": "*",
     "sinon": "^1.17.2",
     "templates": "^0.9.2",
     "vinyl": "^1.1.0"
@@ -47,16 +47,16 @@
     "vinyl"
   ],
   "verb": {
-    "plugins": [
-      "gulp-format-md"
-    ],
     "related": {
       "list": [
         "assemble",
         "assemble-loader",
-        "assemble-streams",
-        "assemble-render-file"
+        "assemble-render-file",
+        "assemble-streams"
       ]
-    }
+    },
+    "plugins": [
+      "gulp-format-md"
+    ]
   }
 }
