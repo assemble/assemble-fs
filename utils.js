@@ -10,6 +10,7 @@ var fn = require;
 require = utils;
 require('extend-shallow', 'extend');
 require('through2', 'through');
+require('stream-combiner', 'combine');
 require('vinyl-fs', 'vfs');
 require = fn;
 

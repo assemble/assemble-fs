@@ -23,6 +23,7 @@
   "dependencies": {
     "extend-shallow": "^2.0.1",
     "lazy-cache": "^1.0.3",
+    "stream-combiner": "^0.2.2",
     "through2": "^2.0.0",
     "vinyl-fs": "^2.2.1"
   },
