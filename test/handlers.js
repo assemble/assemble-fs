@@ -31,7 +31,7 @@ describe('handlers', function() {
       cwd: __dirname
     });
 
-    stream.once('finish', function () {
+    stream.once('finish', function() {
       assert.equal(count, 1);
       cb();
     });
@@ -59,7 +59,7 @@ describe('handlers', function() {
       cwd: __dirname
     });
 
-    stream.once('finish', function () {
+    stream.once('finish', function() {
       assert.equal(count, 1);
       cb();
     });
