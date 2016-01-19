@@ -27,6 +27,7 @@ module.exports = function() {
  */
 
 function plugin(app) {
+  if (this.isRegistered('assemble-fs')) return;
   var vfs = utils.vfs;
 
   // assume none of the handlers exist if `onStream` does not exist
@@ -108,11 +109,13 @@ function plugin(app) {
     if (!dir) {
       throw new TypeError('expected dest to be a string or function.');
     }
+
     var output = utils.combine([
       handle(this, 'preWrite'),
       vfs.dest.apply(vfs, arguments),
       handle(this, 'postWrite')
     ]);
+
     output.on('end', output.emit.bind(output, 'finish'));
     return output;
   });
