@@ -1,4 +1,4 @@
-# assemble-fs [![NPM version](https://img.shields.io/npm/v/assemble-fs.svg)](https://www.npmjs.com/package/assemble-fs)
+# assemble-fs [![NPM version](https://img.shields.io/npm/v/assemble-fs.svg)](https://www.npmjs.com/package/assemble-fs) [![Build Status](https://img.shields.io/travis/assemble/assemble-fs.svg)](https://travis-ci.org/assemble/assemble-fs)
 
 > Assemble plugin to add methods to assemble for working with the file system, like src, dest, copy and symlink.
 
@@ -28,7 +28,7 @@ app.src(['foo/*.hbs'])
 
 ## API
 
-### [.copy](index.js#L56)
+### [.copy](index.js#L57)
 
 Copy files with the given glob `patterns` to the specified `dest`.
 
@@ -48,7 +48,7 @@ app.task('assets', function(cb) {
 });
 ```
 
-### [.src](index.js#L73)
+### [.src](index.js#L74)
 
 Glob patterns or filepaths to source files.
 
@@ -63,7 +63,7 @@ Glob patterns or filepaths to source files.
 app.src('src/*.hbs', {layout: 'default'});
 ```
 
-### [.symlink](index.js#L91)
+### [.symlink](index.js#L92)
 
 Glob patterns or paths for symlinks.
 
@@ -77,7 +77,7 @@ Glob patterns or paths for symlinks.
 app.symlink('src/**');
 ```
 
-### [.dest](index.js#L107)
+### [.dest](index.js#L108)
 
 Specify a destination for processed files.
 
