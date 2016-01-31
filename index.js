@@ -28,7 +28,6 @@ module.exports = function() {
 
 function plugin(app) {
   if (this.isRegistered('assemble-fs')) return;
-  var vfs = utils.vfs;
 
   // assume none of the handlers exist if `onStream` does not exist
   if (typeof app.handler === 'function' && typeof app.onStream !== 'function') {
@@ -73,9 +72,9 @@ function plugin(app) {
 
   app.mixin('src', function(glob, options) {
     var opts = utils.extend({ allowEmpty: true }, options);
-    return vfs.src(glob, opts)
+    return utils.vfs.src(glob, opts)
       .pipe(toCollection(this, opts))
-      .pipe(handle(this, 'onStream'))
+      .pipe(utils.handle(this, 'onStream'))
   });
 
   /**
@@ -90,7 +89,7 @@ function plugin(app) {
    */
 
   app.mixin('symlink', function() {
-    return vfs.symlink.apply(vfs, arguments);
+    return utils.vfs.symlink.apply(utils.vfs, arguments);
   });
 
   /**
@@ -111,33 +110,13 @@ function plugin(app) {
     }
 
     var output = utils.combine([
-      handle(this, 'preWrite'),
-      vfs.dest.apply(vfs, arguments),
-      handle(this, 'postWrite')
+      utils.handle(this, 'preWrite'),
+      utils.vfs.dest.apply(utils.vfs, arguments),
+      utils.handle(this, 'postWrite')
     ]);
 
     output.on('end', output.emit.bind(output, 'finish'));
     return output;
-  });
-}
-
-/**
- * Plugin for handling middleware
- *
- * @param {Object} `app` Instance of "app" (assemble, verb, etc) or a collection
- * @param {String} `stage` the middleware stage to run
- */
-
-function handle(app, stage) {
-  return utils.through.obj(function(file, enc, next) {
-    if (typeof app.handle !== 'function') {
-      return next(null, file);
-    }
-    if (typeof file.options === 'undefined') {
-      return next(null, file);
-    }
-    if (file.isNull()) return next();
-    app.handle(stage, file, next);
   });
 }
 
