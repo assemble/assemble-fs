@@ -34,6 +34,40 @@ describe('src()', function() {
     stream.on('end', cb);
   });
 
+  it('should add files to an existing collection', function(cb) {
+    app.create('files');
+    app.files('foo', {content: 'this is content'});
+    var stream = app.src(path.join(__dirname, 'fixtures/test.coffee'), {collection: 'files'});
+    stream.on('error', cb);
+    stream.on('data', function(file) {
+      assert(file);
+      assert(file.path);
+      assert(file.contents);
+      path.join(file.path, '').should.equal(path.join(__dirname, 'fixtures/test.coffee'));
+      String(file.contents).should.equal('Hello world!');
+    });
+    stream.on('end', function() {
+      assert.equal(Object.keys(app.views.files).length, 2);
+      cb();
+    });
+  });
+
+  it('should add files to a new specified collection', function(cb) {
+    var stream = app.src(path.join(__dirname, 'fixtures/test.coffee'), {collection: 'docs'});
+    stream.on('error', cb);
+    stream.on('data', function(file) {
+      assert(file);
+      assert(file.path);
+      assert(file.contents);
+      path.join(file.path, '').should.equal(path.join(__dirname, 'fixtures/test.coffee'));
+      String(file.contents).should.equal('Hello world!');
+    });
+    stream.on('end', function() {
+      assert.equal(Object.keys(app.views.docs).length, 1);
+      cb();
+    });
+  });
+
   it('should return an input stream for multiple globs', function(cb) {
     var globArray = [
       path.join(__dirname, 'fixtures/generic/run.dmc'),

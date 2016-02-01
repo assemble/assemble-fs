@@ -125,8 +125,8 @@ function plugin(app) {
  */
 
 function toCollection(app, options) {
-  options = options || {};
-  var name = options.collectionName || 'streamFiles';
+  var opts = utils.extend({collection: 'streamFiles'}, options);
+  var name = opts.collection;
   var collection, view;
 
   if (app.isApp) {
