@@ -52,6 +52,24 @@ describe('src()', function() {
     });
   });
 
+  it('should extend file.options with src options', function(cb) {
+    app.create('files');
+    app.file('foo', {content: 'this is content'});
+    var stream = app.src(path.join(__dirname, 'fixtures/test.coffee'), {layout: 'default'});
+    stream.on('error', cb);
+    stream.on('data', function(file) {
+      assert(file);
+      assert(file.path);
+      assert(file.contents);
+      assert.equal(file.options.layout, 'default');
+      path.join(file.path, '').should.equal(path.join(__dirname, 'fixtures/test.coffee'));
+      String(file.contents).should.equal('Hello world!');
+    });
+    stream.on('end', function() {
+      cb();
+    });
+  });
+
   it('should add files to a new specified collection', function(cb) {
     var stream = app.src(path.join(__dirname, 'fixtures/test.coffee'), {collection: 'docs'});
     stream.on('error', cb);

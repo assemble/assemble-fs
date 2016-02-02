@@ -130,7 +130,7 @@ function toCollection(app, options) {
   var collection, view;
 
   if (app.isApp) {
-    collection = app[name] || app.create(name);
+    collection = app[name] || app.create(name, options);
   }
 
   var stream = utils.through.obj(function(file, enc, next) {
@@ -148,6 +148,7 @@ function toCollection(app, options) {
       return next(new Error('assemble-fs expects an instance, collection or view'));
     }
 
+    view.options = utils.extend({}, options, view.options);
     next(null, view);
   });
 
