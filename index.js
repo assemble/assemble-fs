@@ -29,7 +29,11 @@ module.exports = function() {
 function plugin(app) {
   if (this.isRegistered('assemble-fs')) return;
 
-  // assume none of the handlers exist if `onStream` does not exist
+  /**
+   * Setup middleware handlers. Assume none of the handlers exist if `onStream`
+   * does not exist.
+   */
+
   if (typeof app.handler === 'function' && typeof app.onStream !== 'function') {
     app.handler('onStream');
     app.handler('preWrite');
@@ -54,8 +58,9 @@ function plugin(app) {
    */
 
   app.mixin('copy', function(patterns, dest, options) {
-    return this.src(patterns, options)
-      .pipe(this.dest(dest, options))
+    var opts = utils.extend({ allowEmpty: true }, options);
+    return utils.vfs.src(patterns, opts)
+      .pipe(utils.vfs.dest(dest, opts))
   });
 
   /**
