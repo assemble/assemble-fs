@@ -15,8 +15,11 @@ var utils = require('./utils');
 
 module.exports = function() {
   return function(app) {
+    if (!this.isApp) return;
     plugin.call(app, app);
+
     return function(collection) {
+      if (!this.isCollection) return;
       plugin.call(collection, collection);
     };
   };
