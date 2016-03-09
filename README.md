@@ -2,15 +2,15 @@
 
 > Assemble plugin to add methods to assemble for working with the file system, like src, dest, copy and symlink.
 
-This is an assemble core plugin, you probably won't need to use this directly.
-
 ## Install
 
 Install with [npm](https://www.npmjs.com/):
 
 ```sh
-$ npm i assemble-fs --save
+$ npm install assemble-fs --save
 ```
+
+This is an assemble core plugin, you probably won't need to use this directly.
 
 ## Usage
 
@@ -26,91 +26,6 @@ app.src(['foo/*.hbs'])
   .pipe(app.dest('site/'))
 ```
 
-## API
-
-### [.copy](index.js#L57)
-
-Copy files with the given glob `patterns` to the specified `dest`.
-
-**Params**
-
-* `patterns` **{String|Array}**: Glob patterns of files to copy.
-* `dest` **{String|Function}**: Desination directory.
-* `returns` **{Stream}**: Stream, to continue processing if necessary.
-
-**Example**
-
-```js
-app.task('assets', function(cb) {
-  app.copy('assets/**', 'dist/')
-    .on('error', cb)
-    .on('finish', cb)
-});
-```
-
-### [.src](index.js#L74)
-
-Glob patterns or filepaths to source files.
-
-**Params**
-
-* `glob` **{String|Array}**: Glob patterns or file paths to source files.
-* `options` **{Object}**: Options or locals to merge into the context and/or pass to `src` plugins
-
-**Example**
-
-```js
-app.src('src/*.hbs', {layout: 'default'});
-```
-
-### [.symlink](index.js#L92)
-
-Glob patterns or paths for symlinks.
-
-**Params**
-
-* `glob` **{String|Array}**
-
-**Example**
-
-```js
-app.symlink('src/**');
-```
-
-### [.dest](index.js#L108)
-
-Specify a destination for processed files.
-
-**Params**
-
-* `dest` **{String|Function}**: File path or rename function.
-* `options` **{Object}**: Options and locals to pass to `dest` plugins
-
-**Example**
-
-```js
-app.dest('dist/');
-```
-
-## Related projects
-
-* [assemble](https://www.npmjs.com/package/assemble): Assemble is a powerful, extendable and easy to use static site generator for node.js. Used… [more](https://www.npmjs.com/package/assemble) | [homepage](https://github.com/assemble/assemble)
-* [assemble-loader](https://www.npmjs.com/package/assemble-loader): Assemble plugin (^0.6.0) for loading globs of views onto custom view collections. Also works with… [more](https://www.npmjs.com/package/assemble-loader) | [homepage](https://github.com/jonschlinkert/assemble-loader)
-* [assemble-render-file](https://www.npmjs.com/package/assemble-render-file): Assemble plugin for rendering views in a vinyl pipeline. | [homepage](https://github.com/jonschlinkert/assemble-render-file)
-* [assemble-streams](https://www.npmjs.com/package/assemble-streams): Assemble pipeline plugin for pushing a view collection into a vinyl stream. | [homepage](https://github.com/jonschlinkert/assemble-streams)
-
-## Running tests
-
-Install dev dependencies:
-
-```sh
-$ npm i -d && npm test
-```
-
-## Contributing
-
-Pull requests and stars are always welcome. For bugs and feature requests, [please create an issue](https://github.com/jonschlinkert/assemble-fs/issues/new).
-
 ## History
 
 **v0.3.0**
@@ -119,6 +34,39 @@ Pull requests and stars are always welcome. For bugs and feature requests, [plea
 * rename `files` array to `streamFiles`
 * adds `onStream` middleware handler to `src`
 * adds `preWrite` middleware handler to `dest`
+
+## Related projects
+
+* [assemble](https://www.npmjs.com/package/assemble): Assemble is a powerful, extendable and easy to use static site generator for node.js. Used… [more](https://www.npmjs.com/package/assemble) | [homepage](https://github.com/assemble/assemble)
+* [assemble-loader](https://www.npmjs.com/package/assemble-loader): Assemble plugin (^0.6.0) for loading globs of views onto custom view collections. Also works with… [more](https://www.npmjs.com/package/assemble-loader) | [homepage](https://github.com/jonschlinkert/assemble-loader)
+* [assemble-render-file](https://www.npmjs.com/package/assemble-render-file): Assemble plugin for rendering views in a vinyl pipeline. | [homepage](https://github.com/jonschlinkert/assemble-render-file)
+* [assemble-streams](https://www.npmjs.com/package/assemble-streams): Assemble pipeline plugin for pushing a view collection into a vinyl stream. | [homepage](https://github.com/assemble/assemble-streams)
+
+## Contributing
+
+Pull requests and stars are always welcome. For bugs and feature requests, [please create an issue](https://github.com/jonschlinkert/assemble-fs/issues/new).
+
+## Building docs
+
+Generate readme and API documentation with [verb](https://github.com/verbose/verb):
+
+```sh
+$ npm install verb && npm run docs
+```
+
+Or, if [verb](https://github.com/verbose/verb) is installed globally:
+
+```sh
+$ verb
+```
+
+## Running tests
+
+Install dev dependencies:
+
+```sh
+$ npm install -d && npm test
+```
 
 ## Author
 
@@ -130,8 +78,8 @@ Pull requests and stars are always welcome. For bugs and feature requests, [plea
 ## License
 
 Copyright © 2016 [Jon Schlinkert](https://github.com/jonschlinkert)
-Released under the MIT license.
+Released under the [MIT license](https://github.com/assemble/assemble-fs/blob/master/LICENSE).
 
 ***
 
-_This file was generated by [verb](https://github.com/verbose/verb) on January 19, 2016._
+_This file was generated by [verb](https://github.com/verbose/verb), v0.9.0, on March 09, 2016._
