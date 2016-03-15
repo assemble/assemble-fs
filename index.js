@@ -81,6 +81,7 @@ function plugin(app) {
 
   app.mixin('src', function(glob, options) {
     var opts = utils.extend({ allowEmpty: true, onLoad: false }, options);
+    this.options.onLoad = false;
     return utils.vfs.src(glob, opts)
       .pipe(toCollection(this, opts))
       .pipe(utils.handle(this, 'onLoad'))
