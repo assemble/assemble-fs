@@ -16,12 +16,10 @@ var utils = require('./utils');
 module.exports = function() {
   return function() {
     if (!this.isApp) return;
-    this.options.onLoad = false;
     plugin.call(this, this);
 
     return function() {
       if (!this.isCollection) return;
-      this.options.onLoad = false;
       plugin.call(this, this);
     };
   };
