@@ -902,6 +902,7 @@ describe('dest stream', function() {
 describe('dest', function() {
   beforeEach(function(cb) {
     app = templates();
+    app.use(require('..')());
     rimraf(actual, cb);
   });
 
@@ -1007,6 +1008,7 @@ describe('dest', function() {
   describe('ext', function() {
     beforeEach(function() {
       app = templates();
+      app.use(require('..')());
       app.set('ext', '.txt');
     });
 

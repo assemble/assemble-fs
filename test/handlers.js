@@ -6,20 +6,34 @@ var should = require('should');
 var rimraf = require('rimraf');
 var File = require('vinyl');
 var App = require('templates');
-var fs = require('..');
 var app
 
 describe('handlers', function() {
   beforeEach(function() {
     app = new App();
-    app.use(fs());
+    app.use(require('..')());
   });
 
   afterEach(function(cb) {
     rimraf(path.join(__dirname, './out-fixtures/'), cb);
   });
 
-  it('should emit on preWrite', function(cb) {
+  it('should handle onLoad', function(cb) {
+    var count = 0;
+    app.onLoad(/./, function(file, next) {
+      count++;
+      next();
+    });
+
+    app.src(path.join(__dirname, './fixtures/vinyl/test.coffee'))
+      .pipe(app.dest('./out-fixtures/', {cwd: __dirname}))
+      .on('end', function() {
+        assert.equal(count, 1);
+        cb();
+      });
+  });
+
+  it('should handle preWrite', function(cb) {
     var count = 0;
     app.preWrite(/./, function(file, next) {
       count++;
@@ -47,7 +61,7 @@ describe('handlers', function() {
     stream.end();
   });
 
-  it('should emit on postWrite', function(cb) {
+  it('should handle postWrite', function(cb) {
     var count = 0;
     app.postWrite(/./, function(file, next) {
       count++;

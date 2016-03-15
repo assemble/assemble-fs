@@ -14,13 +14,15 @@ var utils = require('./utils');
  */
 
 module.exports = function() {
-  return function(app) {
+  return function() {
     if (!this.isApp) return;
-    plugin.call(app, app);
+    this.options.onLoad = false;
+    plugin.call(this, this);
 
-    return function(collection) {
+    return function() {
       if (!this.isCollection) return;
-      plugin.call(collection, collection);
+      this.options.onLoad = false;
+      plugin.call(this, this);
     };
   };
 };
@@ -41,6 +43,7 @@ function plugin(app) {
     app.handler('onStream');
     app.handler('preWrite');
     app.handler('postWrite');
+    app.handler('onLoad');
   }
 
   /**
@@ -79,9 +82,10 @@ function plugin(app) {
    */
 
   app.mixin('src', function(glob, options) {
-    var opts = utils.extend({ allowEmpty: true }, options);
+    var opts = utils.extend({ allowEmpty: true, onLoad: false }, options);
     return utils.vfs.src(glob, opts)
       .pipe(toCollection(this, opts))
+      .pipe(utils.handle(this, 'onLoad'))
       .pipe(utils.handle(this, 'onStream'))
   });
 
