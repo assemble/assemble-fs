@@ -16,12 +16,10 @@ var utils = require('./utils');
 module.exports = function() {
   return function() {
     if (!this.isApp) return;
-    this.options.onLoad = false;
     plugin.call(this, this);
 
     return function() {
       if (!this.isCollection) return;
-      this.options.onLoad = false;
       plugin.call(this, this);
     };
   };
@@ -82,7 +80,7 @@ function plugin(app) {
    */
 
   app.mixin('src', function(glob, options) {
-    var opts = utils.extend({ allowEmpty: true, onLoad: false }, options);
+    var opts = utils.extend({ allowEmpty: true }, options);
     return utils.vfs.src(glob, opts)
       .pipe(toCollection(this, opts))
       .pipe(utils.handle(this, 'onLoad'))
@@ -149,6 +147,9 @@ function toCollection(app, options) {
     if (file.isNull()) {
       return next();
     }
+
+    // disable default `onLoad` handling inside templates
+    file.options = utils.extend({ onLoad: false }, file.options);
 
     if (app.isApp) {
       view = collection.setView(file.path, file);
