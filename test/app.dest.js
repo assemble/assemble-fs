@@ -84,7 +84,7 @@ describe('dest stream', function() {
       contents: null
     });
 
-    var onEnd = function(){
+    var onEnd = function() {
       buffered.length.should.equal(1);
       buffered[0].should.equal(expectedFile);
       cb();
@@ -109,7 +109,7 @@ describe('dest stream', function() {
       contents: null
     });
 
-    var onEnd = function(){
+    var onEnd = function() {
       buffered.length.should.equal(1);
       buffered[0].should.equal(expectedFile);
       cb();
@@ -138,7 +138,7 @@ describe('dest stream', function() {
       contents: null
     });
 
-    var onEnd = function(){
+    var onEnd = function() {
       buffered.length.should.equal(1);
       buffered[0].should.equal(expectedFile);
       buffered[0].cwd.should.equal(expectedCwd, 'cwd should have changed');
@@ -172,7 +172,7 @@ describe('dest stream', function() {
       contents: expectedContents
     });
 
-    var onEnd = function(){
+    var onEnd = function() {
       buffered.length.should.equal(1);
       buffered[0].should.equal(expectedFile);
       buffered[0].cwd.should.equal(expectedCwd, 'cwd should have changed');
@@ -207,7 +207,7 @@ describe('dest stream', function() {
       contents: expectedContents
     });
 
-    var onEnd = function(){
+    var onEnd = function() {
       buffered.length.should.equal(1);
       buffered[0].should.equal(expectedFile);
       buffered[0].cwd.should.equal(expectedCwd, 'cwd should have changed');
@@ -218,7 +218,7 @@ describe('dest stream', function() {
       cb();
     };
 
-    var stream = app.dest(function(file){
+    var stream = app.dest(function(file) {
       should.exist(file);
       file.should.equal(expectedFile);
       return './actual';
@@ -250,7 +250,7 @@ describe('dest stream', function() {
       }
     });
 
-    var onEnd = function(){
+    var onEnd = function() {
       buffered.length.should.equal(1);
       buffered[0].should.equal(expectedFile);
       buffered[0].cwd.should.equal(expectedCwd, 'cwd should have changed');
@@ -291,7 +291,7 @@ describe('dest stream', function() {
       }
     });
 
-    var onEnd = function(){
+    var onEnd = function() {
       buffered.length.should.equal(1);
       buffered[0].should.equal(expectedFile);
       buffered[0].cwd.should.equal(expectedCwd, 'cwd should have changed');
@@ -309,7 +309,7 @@ describe('dest stream', function() {
     bufferStream = through.obj(dataWrap(buffered.push.bind(buffered)), onEnd);
     stream.pipe(bufferStream);
     stream.write(expectedFile);
-    setTimeout(function(){
+    setTimeout(function() {
       contentStream.write(expectedContents);
       contentStream.end();
     }, 100);
@@ -330,14 +330,14 @@ describe('dest stream', function() {
       path: inputPath,
       contents: null,
       stat: {
-        isDirectory: function(){
+        isDirectory: function() {
           return true;
         },
         mode: expectedMode
       }
     });
 
-    var onEnd = function(){
+    var onEnd = function() {
       buffered.length.should.equal(1);
       buffered[0].should.equal(expectedFile);
       buffered[0].cwd.should.equal(expectedCwd, 'cwd should have changed');
@@ -410,7 +410,7 @@ describe('dest stream', function() {
       contents: expectedContents,
     });
 
-    var onEnd = function(){
+    var onEnd = function() {
       buffered.length.should.equal(1);
       buffered[0].should.equal(expectedFile);
       fs.existsSync(expectedPath).should.equal(true);
@@ -443,7 +443,7 @@ describe('dest stream', function() {
       contents: expectedContents,
     });
 
-    var onEnd = function(){
+    var onEnd = function() {
       buffered.length.should.equal(1);
       buffered[0].should.equal(expectedFile);
       fs.existsSync(expectedPath).should.equal(true);
@@ -515,7 +515,7 @@ describe('dest stream', function() {
       stat: fs.statSync(inputPath)
     });
 
-    var onEnd = function(){
+    var onEnd = function() {
       masked(fs.lstatSync(expectedBase).mode).should.equal(expectedDirMode);
       masked(buffered[0].stat.mode).should.equal(expectedFileMode);
       cb();
@@ -545,7 +545,7 @@ describe('dest stream', function() {
       stat: fs.statSync(inputPath)
     });
 
-    var onEnd = function(){
+    var onEnd = function() {
       buffered[0].base.should.equal(inputBase);
       cb();
     };
@@ -580,7 +580,7 @@ describe('dest stream', function() {
 
     var stream = app.dest('./actual/', {
       cwd: __dirname,
-      base: function(file){
+      base: function(file) {
         should.exist(file);
         file.path.should.equal(inputPath);
         return inputBase;
@@ -792,7 +792,7 @@ describe('dest stream', function() {
       contents: inputContents
     });
 
-    var onEnd = function(){
+    var onEnd = function() {
       buffered.length.should.equal(1);
       bufEqual(fs.readFileSync(expectedPath), new Buffer(existingContents)).should.equal(true);
       cb();
@@ -827,7 +827,7 @@ describe('dest stream', function() {
       contents: inputContents
     });
 
-    var onEnd = function(){
+    var onEnd = function() {
       buffered.length.should.equal(1);
       bufEqual(fs.readFileSync(expectedPath), new Buffer(inputContents)).should.equal(true);
       cb();
@@ -863,7 +863,7 @@ describe('dest stream', function() {
     // `src()` adds this side-effect with `keepSymlinks` option set to false
     inputFile.symlink = inputRelativeSymlinkPath;
 
-    var onEnd = function(){
+    var onEnd = function() {
       fs.readlink(buffered[0].path, function() {
         buffered[0].symlink.should.equal(inputFile.symlink);
         buffered[0].path.should.equal(expectedPath);
