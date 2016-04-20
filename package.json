@@ -60,6 +60,8 @@
     ],
     "related": {
       "list": [
+        "verb",
+        "generate",
         "assemble",
         "assemble-loader",
         "assemble-render-file",
