@@ -401,13 +401,13 @@ describe('dest stream', function() {
     var inputBase = path.join(__dirname, 'fixtures/vinyl/');
     var expectedPath = path.join(__dirname, 'actual/test.coffee');
     var expectedContents = fs.readFileSync(inputPath);
-    var expectedMode = parseInt('666', 8) & (~process.umask());
+    var expectedMode = parseInt('0666', 8) & (~process.umask());
 
     var expectedFile = new File({
       base: inputBase,
       cwd: __dirname,
       path: inputPath,
-      contents: expectedContents,
+      contents: expectedContents
     });
 
     var onEnd = function() {
@@ -440,7 +440,7 @@ describe('dest stream', function() {
       base: inputBase,
       cwd: __dirname,
       path: inputPath,
-      contents: expectedContents,
+      contents: expectedContents
     });
 
     var onEnd = function() {
@@ -452,7 +452,7 @@ describe('dest stream', function() {
     };
 
     chmodSpy.reset();
-    var stream = app.dest('./actual/', {cwd: __dirname, mode:expectedMode});
+    var stream = app.dest('./actual/', { cwd: __dirname, mode: expectedMode });
 
     var buffered = [];
     bufferStream = through.obj(dataWrap(buffered.push.bind(buffered)), onEnd);
@@ -770,7 +770,7 @@ describe('dest stream', function() {
     fs.closeSync(fs.openSync(expectedPath, 'w'));
     fs.chmodSync(expectedPath, expectedMode);
 
-    var stream = app.dest('./actual/', {cwd: __dirname});
+    var stream = app.dest('actual/', { cwd: __dirname });
     stream.on('end', onEnd);
     stream.write(expectedFile);
     stream.end();
@@ -857,7 +857,7 @@ describe('dest stream', function() {
       base: inputBase,
       cwd: __dirname,
       path: inputPath,
-      contents: null, //''
+      contents: null
     });
 
     // `src()` adds this side-effect with `keepSymlinks` option set to false

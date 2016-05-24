@@ -30,7 +30,7 @@ module.exports = function() {
  */
 
 function plugin(app) {
-  if (this.isRegistered('assemble-fs')) return;
+  if (!utils.isValid(app)) return;
 
   /**
    * Setup middleware handlers. Assume none of the handlers exist if `onStream`
