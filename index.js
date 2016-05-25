@@ -145,7 +145,8 @@ function toCollection(app, options) {
 
   var stream = utils.through.obj(function(file, enc, next) {
     if (file.isNull()) {
-      return next();
+      next(null, file);
+      return;
     }
 
     // disable default `onLoad` handling inside templates

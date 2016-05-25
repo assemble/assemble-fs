@@ -25,7 +25,7 @@ require = fn;
  * Return true if app is a valid instance
  */
 
-utils.isValid = function(app, types) {
+utils.isValid = function(app) {
   if (!utils.isValidInstance(app, ['app', 'views', 'collection'])) {
     return false;
   }
