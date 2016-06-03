@@ -30,7 +30,7 @@ module.exports = function() {
  */
 
 function plugin(app) {
-  if (!utils.isValid(app)) return;
+  if (!utils.isValidApp(app, 'assemble-fs', ['app', 'views', 'collection'])) return;
 
   /**
    * Setup middleware handlers. Assume none of the handlers exist if `onStream`
@@ -153,9 +153,9 @@ function toCollection(app, options) {
     file.options = utils.extend({ onLoad: false }, file.options);
 
     if (app.isApp) {
-      view = collection.setView(file.path, file);
+      view = collection.addView(file.path, file);
     } else if (app.isCollection || app.isViews) {
-      view = app.setView(file.path, file);
+      view = app.addView(file.path, file);
     } else if (app.isList) {
       view = app.setItem(file.path, file);
     } else {
