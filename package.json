@@ -25,7 +25,7 @@
   "dependencies": {
     "assemble-handle": "^0.1.2",
     "extend-shallow": "^2.0.1",
-    "is-valid-app": "^0.1.0",
+    "is-valid-app": "^0.2.0",
     "lazy-cache": "^2.0.1",
     "stream-combiner": "^0.2.2",
     "through2": "^2.0.1",
@@ -33,14 +33,14 @@
   },
   "devDependencies": {
     "buffer-equal": "^1.0.0",
-    "expect": "^1.20.1",
+    "expect": "^1.20.2",
     "graceful-fs": "^4.1.4",
     "gulp-format-md": "^0.1.9",
-    "mocha": "^2.5.2",
-    "rimraf": "^2.5.2",
-    "should": "^8.4.0",
+    "mocha": "^2.5.3",
+    "rimraf": "^2.5.3",
+    "should": "^9.0.2",
     "sinon": "^1.17.4",
-    "templates": "^0.18.3",
+    "templates": "^0.24.0",
     "vinyl": "^1.1.1"
   },
   "keywords": [
