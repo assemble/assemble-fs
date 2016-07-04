@@ -11,6 +11,8 @@
   "license": "MIT",
   "files": [
     "index.js",
+    "LICENSE",
+    "README.md",
     "utils.js"
   ],
   "main": "index.js",
@@ -46,6 +48,7 @@
     "assembleplugin",
     "file",
     "fs",
+    "plugin",
     "system",
     "vinyl"
   ],
@@ -61,16 +64,17 @@
     ],
     "related": {
       "list": [
-        "verb",
-        "generate",
         "assemble",
         "assemble-loader",
         "assemble-render-file",
-        "assemble-streams"
+        "assemble-streams",
+        "generate",
+        "verb"
       ]
     },
     "reflinks": [
-      "verb"
+      "verb",
+      "verb-readme-generator"
     ],
     "lint": {
       "reflinks": true
