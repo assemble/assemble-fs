@@ -125,7 +125,11 @@ function plugin(app) {
       utils.handle(this, 'postWrite')
     ]);
 
-    output.on('end', output.emit.bind(output, 'finish'));
+    output.on('end', function() {
+      output.emit('finish');
+      app.emit('end');
+    });
+
     return output;
   });
 }
