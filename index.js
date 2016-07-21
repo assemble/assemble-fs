@@ -61,7 +61,7 @@ function plugin(app) {
    * @api public
    */
 
-  app.mixin('copy', function(patterns, dest, options) {
+  this.define('copy', function(patterns, dest, options) {
     var opts = utils.extend({ allowEmpty: true }, options);
     return utils.vfs.src(patterns, opts)
       .pipe(utils.vfs.dest(dest, opts))
@@ -79,12 +79,12 @@ function plugin(app) {
    * @api public
    */
 
-  app.mixin('src', function(glob, options) {
+  this.define('src', function(glob, options) {
     var opts = utils.extend({ allowEmpty: true }, options);
     return utils.vfs.src(glob, opts)
       .pipe(toCollection(this, opts))
-      .pipe(utils.handle(this, 'onLoad'))
-      .pipe(utils.handle(this, 'onStream'))
+      .pipe(utils.handle.once(this, 'onLoad'))
+      .pipe(utils.handle.once(this, 'onStream'))
   });
 
   /**
@@ -98,7 +98,7 @@ function plugin(app) {
    * @api public
    */
 
-  app.mixin('symlink', function() {
+  this.define('symlink', function() {
     return utils.vfs.symlink.apply(utils.vfs, arguments);
   });
 
@@ -114,15 +114,15 @@ function plugin(app) {
    * @api public
    */
 
-  app.mixin('dest', function(dir) {
+  this.define('dest', function(dir, options) {
     if (!dir) {
       throw new TypeError('expected dest to be a string or function.');
     }
 
     var output = utils.combine([
-      utils.handle(this, 'preWrite'),
+      utils.handle.once(this, 'preWrite'),
       utils.vfs.dest.apply(utils.vfs, arguments),
-      utils.handle(this, 'postWrite')
+      utils.handle.once(this, 'postWrite')
     ]);
 
     output.on('end', function() {
