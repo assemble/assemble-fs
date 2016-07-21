@@ -23,7 +23,7 @@
     "test": "mocha"
   },
   "dependencies": {
-    "assemble-handle": "^0.1.2",
+    "assemble-handle": "^0.1.3",
     "extend-shallow": "^2.0.1",
     "is-valid-app": "^0.2.0",
     "lazy-cache": "^2.0.1",
