@@ -29,14 +29,18 @@
     "lazy-cache": "^2.0.1",
     "stream-combiner": "^0.2.2",
     "through2": "^2.0.1",
-    "vinyl-fs": "^2.4.3"
+    "vinyl-fs": "github:doowb/vinyl-fs#write-file"
   },
   "devDependencies": {
     "buffer-equal": "^1.0.0",
+    "default-resolution": "^2.0.0",
+    "delete": "^0.3.2",
     "expect": "^1.20.2",
+    "from2": "^2.1.1",
     "graceful-fs": "^4.1.4",
     "gulp-format-md": "^0.1.9",
     "mocha": "^2.5.3",
+    "readable-stream": "^2.1.4",
     "rimraf": "^2.5.3",
     "should": "^9.0.2",
     "sinon": "^1.17.4",

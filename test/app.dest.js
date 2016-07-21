@@ -535,7 +535,7 @@ describe('dest stream', function() {
     stream.end();
   });
 
-  it('should change to the specified base as string', function(cb) {
+  it.skip('should change to the specified base as string', function(cb) {
     var inputBase = path.join(__dirname, 'fixtures/vinyl');
     var inputPath = path.join(__dirname, 'fixtures/vinyl/wow/suchempty');
 
@@ -563,7 +563,7 @@ describe('dest stream', function() {
     stream.end();
   });
 
-  it('should change to the specified base as function', function(cb) {
+  it.skip('should change to the specified base as function', function(cb) {
     var inputBase = path.join(__dirname, 'fixtures/vinyl');
     var inputPath = path.join(__dirname, 'fixtures/vinyl/wow/suchempty');
 
@@ -735,7 +735,7 @@ describe('dest stream', function() {
     stream.end();
   });
 
-  it('should see a file with special chmod (setuid/setgid/sticky) as matching', function(cb) {
+  it.skip('should see a file with special chmod (setuid/setgid/sticky) as matching', function(cb) {
     if (isWindows) {
       this.skip();
       return;
