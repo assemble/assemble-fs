@@ -154,20 +154,20 @@ function toCollection(app, options) {
     }
 
     // disable default `onLoad` handling inside templates
-    file.options = utils.extend({ onLoad: false }, file.options);
+    file.options = utils.extend({ onLoad: false }, options, file.options);
 
     if (app.isApp) {
-      view = collection.addView(file.path, file);
+      file = collection.addView(file.path, file);
     } else if (app.isCollection || app.isViews) {
-      view = app.addView(file.path, file);
+      file = app.addView(file.path, file);
     } else if (app.isList) {
-      view = app.setItem(file.path, file);
+      file = app.setItem(file.path, file);
     } else {
-      return next(new Error('assemble-fs expects an instance, collection or view'));
+      next(new Error('assemble-fs expects an instance, collection or view'));
+      return;
     }
 
-    view.options = utils.extend({}, options, view.options);
-    next(null, view);
+    next(null, file);
   });
 
   app.stream = stream;
