@@ -120,7 +120,7 @@ function plugin(app) {
     }
 
     var output = utils.combine([
-      utils.prepare(dest, options),
+      utils.prepare(dest, utils.extend({}, this.options, options)),
       utils.handle.once(this, 'preWrite'),
       utils.vfs.dest.apply(utils.vfs, arguments),
       utils.handle.once(this, 'postWrite')

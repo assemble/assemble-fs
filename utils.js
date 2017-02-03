@@ -20,7 +20,7 @@ require('vinyl-fs', 'vfs');
 require = fn;
 
 // until `vinyl-prepare` is published
-utils.prepare = function(dest, file, options, cb) {
+utils.prepare = function(dest, options) {
   return utils.through.obj(function(file, enc, next) {
     prepare(dest, file, options, next);
   });
