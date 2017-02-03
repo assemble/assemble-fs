@@ -64,7 +64,7 @@ function plugin(app) {
   this.define('copy', function(patterns, dest, options) {
     var opts = utils.extend({ allowEmpty: true }, options);
     return utils.vfs.src(patterns, opts)
-      .pipe(utils.vfs.dest(dest, opts))
+      .pipe(utils.vfs.dest(dest, opts));
   });
 
   /**
@@ -84,7 +84,7 @@ function plugin(app) {
     return utils.vfs.src(glob, opts)
       .pipe(toCollection(this, opts))
       .pipe(utils.handle.once(this, 'onLoad'))
-      .pipe(utils.handle.once(this, 'onStream'))
+      .pipe(utils.handle.once(this, 'onStream'));
   });
 
   /**
@@ -114,12 +114,13 @@ function plugin(app) {
    * @api public
    */
 
-  this.define('dest', function(dir, options) {
-    if (!dir) {
+  this.define('dest', function(dest, options) {
+    if (!dest) {
       throw new TypeError('expected dest to be a string or function.');
     }
 
     var output = utils.combine([
+      utils.prepare(dest, options),
       utils.handle.once(this, 'preWrite'),
       utils.vfs.dest.apply(utils.vfs, arguments),
       utils.handle.once(this, 'postWrite')
@@ -135,20 +136,25 @@ function plugin(app) {
 }
 
 /**
- * Push vinyl files into a collection or list.
+ * Push vinyl files onto a collection or list.
  */
 
 function toCollection(app, options) {
   var opts = utils.extend({collection: 'streamFiles'}, options);
   var name = opts.collection;
-  var collection, view;
+  var collection;
 
   if (app.isApp) {
     collection = app[name] || app.create(name, options);
   }
 
-  var stream = utils.through.obj(function(file, enc, next) {
+  return utils.through.obj(function(file, enc, next) {
     if (file.isNull()) {
+      next(null, file);
+      return;
+    }
+
+    if (utils.isBinary(file)) {
       next(null, file);
       return;
     }
@@ -169,7 +175,4 @@ function toCollection(app, options) {
 
     next(null, file);
   });
-
-  app.stream = stream;
-  return stream;
 }
