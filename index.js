@@ -1,8 +1,8 @@
 /*!
- * assemble-fs <https://github.com/jonschlinkert/assemble-fs>
+ * assemble-fs <https://github.com/assemble/assemble-fs>
  *
- * Copyright (c) 2015, Jon Schlinkert.
- * Licensed under the MIT License.
+ * Copyright (c) 2015, 2017, Jon Schlinkert.
+ * Released under the MIT License.
  */
 
 'use strict';
@@ -114,13 +114,15 @@ function plugin(app) {
    * @api public
    */
 
-  this.define('dest', function(dest, options) {
+  this.define('dest', function fn(dest, options) {
     if (!dest) {
       throw new TypeError('expected dest to be a string or function.');
     }
 
+    // ensure "dest" is added to the context before rendering
+    utils.prepareDest(app, dest, options);
+
     var output = utils.combine([
-      utils.prepare(dest, utils.extend({}, this.options, options)),
       utils.handle.once(this, 'preWrite'),
       utils.vfs.dest.apply(utils.vfs, arguments),
       utils.handle.once(this, 'postWrite')
