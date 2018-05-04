@@ -2,6 +2,8 @@
 
 > Assemble plugin to add methods to assemble for working with the file system, like src, dest, copy and symlink.
 
+Please consider following this project's author, [Jon Schlinkert](https://github.com/jonschlinkert), and consider starring the project to show your :heart: and support.
+
 ## Install
 
 Install with [npm](https://www.npmjs.com/):
@@ -15,15 +17,83 @@ This is an assemble core plugin, you probably won't need to use this directly.
 ## Usage
 
 ```js
-var assemble = require('assemble');
+const Assemble = require('assemble');
 
 // create your application and add the plugin
-var app = assemble()
-  .use(require('assemble-fs'))
+const app = new Assemble();
+app.use(require('assemble-fs'))
 
 // now you can use `src` and `dest`
 app.src(['foo/*.hbs'])
-  .pipe(app.dest('site/'))
+  .pipe(app.dest('site/'));
+```
+
+## API
+
+Adds the following methods to your [assemble](https://github.com/assemble/assemble) instance (works with any [Templates][] application):
+
+### [.copy](index.js#L43)
+
+Copy files with the given glob `patterns` to the specified `dest`.
+
+**Params**
+
+* `patterns` **{String|Array}**: Glob patterns of files to copy.
+* `dest` **{String|Function}**: Desination directory.
+* `returns` **{Stream}**: Stream, to continue processing if necessary.
+
+**Example**
+
+```js
+app.task('assets', function(cb) {
+  app.copy('assets/**', 'dist/')
+    .on('error', cb)
+    .on('finish', cb)
+});
+```
+
+### [.src](index.js#L61)
+
+Glob patterns or filepaths to source files.
+
+**Params**
+
+* `glob` **{String|Array}**: Glob patterns or file paths to source files.
+* `options` **{Object}**: Options or locals to merge into the context and/or pass to `src` plugins
+
+**Example**
+
+```js
+app.src('src/*.hbs', {layout: 'default'});
+```
+
+### [.symlink](index.js#L79)
+
+Glob patterns or paths for symlinks.
+
+**Params**
+
+* `glob` **{String|Array}**
+
+**Example**
+
+```js
+app.symlink('src/**');
+```
+
+### [.dest](index.js#L94)
+
+Specify a destination for processed files. Runs `.preWrite` and `.postWrite` middleware handlers on all files.
+
+**Params**
+
+* `dest` **{String|Function}**: File path or rename function.
+* `options` **{Object}**: Options and locals to pass to `dest` plugins
+
+**Example**
+
+```js
+app.dest('dist/');
 ```
 
 ## History
@@ -41,27 +111,26 @@ app.src(['foo/*.hbs'])
 
 ## About
 
-### Related projects
-
-* [assemble-loader](https://www.npmjs.com/package/assemble-loader): Assemble plugin (^0.6.0) for loading globs of views onto custom view collections. Also works with… [more](https://github.com/assemble/assemble-loader) | [homepage](https://github.com/assemble/assemble-loader "Assemble plugin (^0.6.0) for loading globs of views onto custom view collections. Also works with verb or other Templates.js based applications.")
-* [assemble-render-file](https://www.npmjs.com/package/assemble-render-file): Assemble plugin for rendering views in a vinyl pipeline. | [homepage](https://github.com/assemble/assemble-render-file "Assemble plugin for rendering views in a vinyl pipeline.")
-* [assemble-streams](https://www.npmjs.com/package/assemble-streams): Assemble pipeline plugin for pushing views into a vinyl stream. | [homepage](https://github.com/assemble/assemble-streams "Assemble pipeline plugin for pushing views into a vinyl stream.")
-* [assemble](https://www.npmjs.com/package/assemble): Get the rocks out of your socks! Assemble makes you fast at creating web projects… [more](https://github.com/assemble/assemble) | [homepage](https://github.com/assemble/assemble "Get the rocks out of your socks! Assemble makes you fast at creating web projects. Assemble is used by thousands of projects for rapid prototyping, creating themes, scaffolds, boilerplates, e-books, UI components, API documentation, blogs, building websit")
-* [generate](https://www.npmjs.com/package/generate): Command line tool and developer framework for scaffolding out new GitHub projects. Generate offers the… [more](https://github.com/generate/generate) | [homepage](https://github.com/generate/generate "Command line tool and developer framework for scaffolding out new GitHub projects. Generate offers the robustness and configurability of Yeoman, the expressiveness and simplicity of Slush, and more powerful flow control and composability than either.")
-* [verb](https://www.npmjs.com/package/verb): Documentation generator for GitHub projects. Verb is extremely powerful, easy to use, and is used… [more](https://github.com/verbose/verb) | [homepage](https://github.com/verbose/verb "Documentation generator for GitHub projects. Verb is extremely powerful, easy to use, and is used on hundreds of projects of all sizes to generate everything from API docs to readmes.")
-
-### Contributing
+<details>
+<summary><strong>Contributing</strong></summary>
 
 Pull requests and stars are always welcome. For bugs and feature requests, [please create an issue](../../issues/new).
 
-### Contributors
+</details>
 
-| **Commits** | **Contributor** | 
-| --- | --- |
-| 89 | [jonschlinkert](https://github.com/jonschlinkert) |
-| 11 | [doowb](https://github.com/doowb) |
+<details>
+<summary><strong>Running Tests</strong></summary>
 
-### Building docs
+Running and reviewing unit tests is a great way to get familiarized with a library and its API. You can install dependencies and run tests with the following command:
+
+```sh
+$ npm install && npm test
+```
+
+</details>
+
+<details>
+<summary><strong>Building docs</strong></summary>
 
 _(This project's readme.md is generated by [verb](https://github.com/verbose/verb-generate-readme), please don't edit the readme directly. Any changes to the readme must be made in the [.verb.md](.verb.md) readme template.)_
 
@@ -71,26 +140,36 @@ To generate the readme, run the following command:
 $ npm install -g verbose/verb#dev verb-generate-readme && verb
 ```
 
-### Running tests
+</details>
 
-Running and reviewing unit tests is a great way to get familiarized with a library and its API. You can install dependencies and run tests with the following command:
+### Related projects
 
-```sh
-$ npm install && npm test
-```
+You might also be interested in these projects:
+
+* [generate](https://www.npmjs.com/package/generate): Command line tool and developer framework for scaffolding out new GitHub projects. Generate offers the… [more](https://github.com/generate/generate) | [homepage](https://github.com/generate/generate "Command line tool and developer framework for scaffolding out new GitHub projects. Generate offers the robustness and configurability of Yeoman, the expressiveness and simplicity of Slush, and more powerful flow control and composability than either.")
+* [update](https://www.npmjs.com/package/update): Be scalable! Update is a new, open source developer framework and CLI for automating updates… [more](https://github.com/update/update) | [homepage](https://github.com/update/update "Be scalable! Update is a new, open source developer framework and CLI for automating updates of any kind in code projects.")
+* [verb](https://www.npmjs.com/package/verb): Documentation generator for GitHub projects. Verb is extremely powerful, easy to use, and is used… [more](https://github.com/verbose/verb) | [homepage](https://github.com/verbose/verb "Documentation generator for GitHub projects. Verb is extremely powerful, easy to use, and is used on hundreds of projects of all sizes to generate everything from API docs to readmes.")
+
+### Contributors
+
+| **Commits** | **Contributor** | 
+| --- | --- |
+| 95 | [jonschlinkert](https://github.com/jonschlinkert) |
+| 11 | [doowb](https://github.com/doowb) |
 
 ### Author
 
 **Jon Schlinkert**
 
-* [github/jonschlinkert](https://github.com/jonschlinkert)
-* [twitter/jonschlinkert](https://twitter.com/jonschlinkert)
+* [LinkedIn Profile](https://linkedin.com/in/jonschlinkert)
+* [GitHub Profile](https://github.com/jonschlinkert)
+* [Twitter Profile](https://twitter.com/jonschlinkert)
 
 ### License
 
-Copyright © 2017, [Jon Schlinkert](https://github.com/jonschlinkert).
+Copyright © 2018, [Jon Schlinkert](https://github.com/jonschlinkert).
 Released under the [MIT License](LICENSE).
 
 ***
 
-_This file was generated by [verb-generate-readme](https://github.com/verbose/verb-generate-readme), v0.6.0, on May 19, 2017._
+_This file was generated by [verb-generate-readme](https://github.com/verbose/verb-generate-readme), v0.6.0, on May 04, 2018._
