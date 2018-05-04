@@ -28,7 +28,7 @@ describe('.dest() on not owned files', function() {
       base: __dirname,
       cwd: __dirname,
       path: 'not-owned/not-owned.txt',
-      contents: new Buffer('Something new'),
+      contents: Buffer.from('Something new'),
       stat: {
         mtime: new Date(Date.now() - 1000),
       },
@@ -56,7 +56,7 @@ describe('.dest() on not owned files', function() {
       base: __dirname,
       cwd: __dirname,
       path: 'not-owned/not-owned.txt',
-      contents: new Buffer('Something new'),
+      contents: Buffer.from('Something new'),
       stat: {
         mode: parseInt('777', 8),
       },

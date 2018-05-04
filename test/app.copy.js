@@ -1,21 +1,21 @@
 'use strict';
 
 require('mocha');
-var path = require('path');
-var assert = require('assert');
-var rimraf = require('rimraf');
-var App = require('templates');
-var afs = require('..');
-var app;
+const path = require('path');
+const assert = require('assert');
+const rimraf = require('rimraf');
+const App = require('templates');
+const vfs = require('..');
+let app;
 
-var fixtures = path.join(__dirname, 'fixtures/copy/*.txt');
-var outpath = path.join(__dirname, 'out-fixtures');
+const fixtures = path.join(__dirname, 'fixtures/copy/*.txt');
+const outpath = path.join(__dirname, 'out-fixtures');
 
 describe('app.copy', function() {
   beforeEach(function(cb) {
     rimraf(outpath, cb);
     app = new App();
-    app.use(afs());
+    app.use(vfs());
   });
 
   afterEach(function(cb) {

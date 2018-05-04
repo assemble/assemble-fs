@@ -477,7 +477,7 @@ describe('symlink stream', function() {
       var file = new File({
         path: srcPath,
         cwd: __dirname,
-        contents: new Buffer('1234567890'),
+        contents: Buffer.from('1234567890'),
       });
 
       stream.write(file);

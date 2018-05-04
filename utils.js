@@ -1,23 +1,26 @@
 'use strict';
 
-var path = require('path');
-var utils = require('lazy-cache')(require);
-var fn = require;
-require = utils;
+const path = require('path');
+const assign = Object.assign;
+const noop = (data, enc, next) => next(null, data);
+const { Transform } = require('readable-stream');
+const utils = exports = module.exports;
 
-/**
- * Lazily required module dependencies
- */
+define(utils, 'vfs', () => require('vinyl-fs'));
+define(utils, 'combine', () => require('stream-combiner'));
 
-require('assemble-handle', 'handle');
-require('extend-shallow', 'extend');
-require('fs-exists-sync', 'exists');
-require('file-is-binary', 'isBinary');
-require('is-valid-app');
-require('stream-combiner', 'combine');
-require('through2', 'through');
-require('vinyl-fs', 'vfs');
-require = fn;
+function define(obj, key, fn) {
+  Reflect.defineProperty(obj, key, { get: fn });
+}
+
+utils.define = function(obj, key, value) {
+  Reflect.defineProperty(obj, key, {
+    configurable: true,
+    enumerable: false,
+    writable: true,
+    value
+  });
+};
 
 /**
  * This function does all of the path-specific operations that
@@ -36,31 +39,31 @@ require = fn;
  * @param {Object} options
  */
 
-utils.prepare = function(view, dest, options) {
-  var file = view.clone();
-  var opts = utils.extend({cwd: process.cwd()}, options);
-  var cwd = path.resolve(opts.cwd);
+utils.prepare = function(app, view, dest, options = {}) {
+  if (view.preparedDest) return;
+  const file = new view.constructor(view);
+  const cwd = app.paths.templates;
 
-  var destDir = typeof dest === 'function' ? dest(file) : dest;
+  const destDir = typeof dest === 'function' ? dest(file) : dest;
   if (typeof destDir !== 'string') {
     throw new TypeError('expected destination directory to be a string');
   }
 
-  var baseDir = typeof opts.base === 'function'
-    ? opts.base(file)
+  const baseDir = typeof options.base === 'function'
+    ? options.base(file)
     : path.resolve(cwd, destDir);
 
   if (typeof baseDir !== 'string') {
     throw new TypeError('expected base directory to be a string');
   }
 
-  var writePath = path.resolve(baseDir, file.relative);
-  var data = {};
-
+  const writePath = path.join(destDir, view.basename);
+  const data = {};
   data.cwd = cwd;
   data.base = baseDir;
   data.dest = destDir;
   data.path = writePath;
+  view.preparedDest = true;
   return data;
 };
 
@@ -71,28 +74,56 @@ utils.prepare = function(view, dest, options) {
  * so that views can render relative paths.
  */
 
-utils.prepareDest = function _(app, dest, options) {
+utils.prepareDest = function fn(app, dest, options) {
   app.emit('dest', dest, options);
 
-  var appOpts = utils.extend({}, this.options);
-  delete appOpts.tasks;
+  const appOpts = assign({}, this.options);
   delete appOpts.engine;
+  delete appOpts.tasks;
 
-  var opts = utils.extend({}, appOpts, options);
-  if (_.prepare) {
-    app.off('_prepare', _.prepare);
+  const opts = assign({}, appOpts, options);
+
+  if (fn.prepare) {
+    app.off('prepareDest', fn.prepare);
   }
 
-  _.prepare = function(view) {
-    var data = utils.prepare(view, dest, opts);
-    view.data = utils.extend({}, view.data, data);
+  fn.prepare = function(view) {
+    const data = utils.prepare(app, view, dest, opts);
+    view.data = assign({}, view.data, data);
   };
 
-  app.on('_prepare', _.prepare);
+  app.on('prepareDest', fn.prepare);
 };
 
-/**
- * Expose `utils`
- */
+utils.through = function(options, transform, flush) {
+  if (typeof options === 'function') {
+    flush = transform;
+    transform = options;
+    options = null;
+  }
 
-module.exports = utils;
+  if (!transform) {
+    transform = noop;
+  }
+
+  if (transform.length === 2) {
+    const fn = transform;
+    transform = (data, enc, cb) => fn(data, cb);
+  }
+
+  const stream = new Transform({ transform, flush, ...options });
+  stream.setMaxListeners(0);
+  return stream;
+};
+
+utils.through.obj = (options, transform, flush) => {
+  if (typeof options === 'function') {
+    flush = transform;
+    transform = options;
+    options = null;
+  }
+
+  const opts = Object.assign({ objectMode: true, highWaterMark: 16 }, options);
+  return utils.through(opts, transform, flush);
+};
+

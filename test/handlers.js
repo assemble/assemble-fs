@@ -1,17 +1,17 @@
 'use strict';
 
-var path = require('path');
-var assert = require('assert');
-var should = require('should');
-var rimraf = require('rimraf');
-var File = require('vinyl');
-var App = require('templates');
-var app
+const path = require('path');
+const assert = require('assert');
+const rimraf = require('rimraf');
+const App = require('templates');
+const File = require('vinyl');
+const vfs = require('..');
+let app;
 
 describe('handlers', function() {
   beforeEach(function() {
     app = new App();
-    app.use(require('..')());
+    app.use(vfs());
   });
 
   afterEach(function(cb) {
@@ -19,10 +19,9 @@ describe('handlers', function() {
   });
 
   it('should handle onLoad', function(cb) {
-    var count = 0;
-    app.onLoad(/./, function(file, next) {
+    let count = 0;
+    app.onLoad(/./, function(file) {
       count++;
-      next();
     });
 
     app.src(path.join(__dirname, './fixtures/vinyl/test.coffee'))
@@ -34,14 +33,13 @@ describe('handlers', function() {
   });
 
   it('should handle preWrite', function(cb) {
-    var count = 0;
-    app.preWrite(/./, function(file, next) {
+    let count = 0;
+    app.preWrite(/./, function(file) {
       count++;
-      next();
     });
 
-    var srcPath = path.join(__dirname, './fixtures/vinyl/test.coffee');
-    var stream = app.dest('./out-fixtures/', {
+    const srcPath = path.join(__dirname, './fixtures/vinyl/test.coffee');
+    const stream = app.dest('./out-fixtures/', {
       cwd: __dirname
     });
 
@@ -50,26 +48,24 @@ describe('handlers', function() {
       cb();
     });
 
-    var file = new File({
+    const file = new File({
       path: srcPath,
       cwd: __dirname,
-      contents: new Buffer("1234567890")
+      contents: Buffer.from('1234567890')
     });
-    file.options = {};
 
     stream.write(file);
     stream.end();
   });
 
   it('should handle postWrite', function(cb) {
-    var count = 0;
-    app.postWrite(/./, function(file, next) {
+    let count = 0;
+    app.postWrite(/./, function(file) {
       count++;
-      next();
     });
 
-    var srcPath = path.join(__dirname, './fixtures/vinyl/test.coffee');
-    var stream = app.dest('./out-fixtures/', {
+    const srcPath = path.join(__dirname, './fixtures/vinyl/test.coffee');
+    const stream = app.dest('./out-fixtures/', {
       cwd: __dirname
     });
 
@@ -78,12 +74,11 @@ describe('handlers', function() {
       cb();
     });
 
-    var file = new File({
+    const file = new File({
       path: srcPath,
       cwd: __dirname,
-      contents: new Buffer("1234567890")
+      contents: Buffer.from('1234567890')
     });
-    file.options = {};
 
     stream.write(file);
     stream.end();

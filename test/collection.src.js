@@ -1,11 +1,10 @@
 'use strict';
 
-var path = require('path');
-var assert = require('assert');
-var should = require('should');
-var App = require('templates');
-var fs = require('..');
-var app, pages, posts;
+const path = require('path');
+const assert = require('assert');
+const App = require('templates');
+const fs = require('..');
+let app, pages;
 
 describe('collection.src()', function() {
   beforeEach(function() {
@@ -13,11 +12,10 @@ describe('collection.src()', function() {
     app.use(fs());
 
     pages = app.create('pages');
-    posts = app.create('posts');
   });
 
   it('should return a stream', function(cb) {
-    var stream = pages.src(path.join(__dirname, 'fixtures/*.coffee'));
+    const stream = pages.src(path.join(__dirname, 'fixtures/*.coffee'));
     assert(stream);
     assert.equal(typeof stream.on, 'function');
     assert.equal(typeof stream.pipe, 'function');
@@ -25,7 +23,7 @@ describe('collection.src()', function() {
   });
 
   it('should convert vinyl files to views', function(cb) {
-    var patterns = path.join(__dirname, 'fixtures/*.coffee');
+    const patterns = path.join(__dirname, 'fixtures/*.coffee');
     pages.src(patterns)
       .on('error', cb)
       .on('data', function(file) {
@@ -35,289 +33,288 @@ describe('collection.src()', function() {
   });
 
   it('should add src files to the collection', function(cb) {
-    var patterns = path.join(__dirname, 'fixtures/*.coffee');
+    const patterns = path.join(__dirname, 'fixtures/*.coffee');
+
     pages.src(patterns)
-      .on('error', cb)
       .on('data', function(file) {
         assert(pages.views);
-        assert(Object.keys(pages.views).length === 1);
+        assert.equal(pages.views.size, 1);
       })
+      .on('error', cb)
       .on('end', cb);
   });
 
   it('should work with views added with other methods', function(cb) {
-    pages.addView('a', {content: '...'});
-    pages.addView('b', {content: '...'});
-    pages.addView('c', {content: '...'});
+    pages.set('a', {content: '...'});
+    pages.set('b', {content: '...'});
+    pages.set('c', {content: '...'});
 
-    var patterns = path.join(__dirname, 'fixtures/*.coffee');
-    var stream = pages.src(patterns);
-    stream.on('error', cb);
-    stream.on('data', function(file) {
-      assert(pages.views);
-      assert(Object.keys(pages.views).length === 4);
-    });
-    stream.on('end', cb);
+    const patterns = path.join(__dirname, 'fixtures/*.coffee');
+    pages.src(patterns)
+      .on('error', cb)
+      .on('data', function(file) {
+        assert(pages.views);
+        assert.equal(pages.views.size, 4);
+      })
+      .on('end', cb);
   });
 
   it('should return an input stream from a flat glob', function(cb) {
-    var stream = pages.src(path.join(__dirname, 'fixtures/*.coffee'));
+    const stream = pages.src(path.join(__dirname, 'fixtures/*.coffee'));
     stream.on('error', cb);
     stream.on('data', function(file) {
-      should.exist(file);
-      should.exist(file.path);
-      should.exist(file.contents);
-      path.join(file.path, '').should.equal(path.join(__dirname, 'fixtures/test.coffee'));
-      String(file.contents).should.equal('Hello world!');
+      assert(file);
+      assert(file.path);
+      assert(file.contents);
+      assert.equal(path.join(file.path, ''), path.join(__dirname, 'fixtures/test.coffee'));
+      assert.equal(String(file.contents), 'Hello world!');
     });
-    stream.on('end', function() {
-      cb();
-    });
+
+    stream.on('end', cb);
   });
 
   it('should return an input stream for multiple globs', function(cb) {
-    var globArray = [
+    const globArray = [
       path.join(__dirname, 'fixtures/generic/run.dmc'),
       path.join(__dirname, 'fixtures/generic/test.dmc')
     ];
-    var stream = pages.src(globArray);
 
-    var files = [];
+    const stream = pages.src(globArray);
+    const files = [];
+
     stream.on('error', cb);
     stream.on('data', function(file) {
-      should.exist(file);
-      should.exist(file.path);
+      assert(file);
+      assert(file.path);
       files.push(file);
     });
+
     stream.on('end', function() {
-      files.length.should.equal(2);
-      files[0].path.should.equal(globArray[0]);
-      files[1].path.should.equal(globArray[1]);
+      assert.equal(files.length, 2);
+      assert.equal(files[0].path, globArray[0]);
+      assert.equal(files[1].path, globArray[1]);
       cb();
     });
   });
 
   it('should return an input stream for multiple globs with negation', function(cb) {
-    var expectedPath = path.join(__dirname, 'fixtures/generic/run.dmc');
-    var globArray = [
+    const expectedPath = path.join(__dirname, 'fixtures/generic/run.dmc');
+    const globArray = [
       path.join(__dirname, 'fixtures/generic/*.dmc'),
-      '!' + path.join(__dirname, 'fixtures/generic/test.dmc'),
+      '!' + path.join(__dirname, 'fixtures/generic/test.dmc')
     ];
-    var stream = pages.src(globArray);
 
-    var files = [];
+    const stream = pages.src(globArray);
+    const files = [];
+
     stream.on('error', cb);
     stream.on('data', function(file) {
-      should.exist(file);
-      should.exist(file.path);
+      assert(file);
+      assert(file.path);
       files.push(file);
     });
+
     stream.on('end', function() {
-      files.length.should.equal(1);
-      files[0].path.should.equal(expectedPath);
+      assert.equal(files.length, 1);
+      assert.equal(files[0].path, expectedPath);
       cb();
     });
   });
 
   it('should return an input stream with no contents when read is false', function(cb) {
-    var stream = pages.src(path.join(__dirname, 'fixtures/*.coffee'), {read: false});
+    const stream = pages.src(path.join(__dirname, 'fixtures/*.coffee'), {read: false});
     stream.on('error', cb);
     stream.on('data', function(file) {
-      should.exist(file);
-      should.exist(file.path);
-      should.not.exist(file.contents);
-      path.join(file.path, '').should.equal(path.join(__dirname, 'fixtures/test.coffee'));
+      assert(file);
+      assert(file.path);
+      assert(!file.contents);
+      assert.equal(path.join(file.path, ''), path.join(__dirname, 'fixtures/test.coffee'));
     });
-    stream.on('end', function() {
-      cb();
-    });
+
+    stream.on('end', cb);
   });
 
   it('should return an input stream with contents as stream when buffer is false', function(cb) {
-    var stream = pages.src(path.join(__dirname, 'fixtures/*.coffee'), {buffer: false});
+    const stream = pages.src(path.join(__dirname, 'fixtures/*.coffee'), {buffer: false});
     stream.on('error', cb);
     stream.on('data', function(file) {
-      should.exist(file);
-      should.exist(file.path);
-      should.exist(file.contents);
-      var buf = '';
+      assert(file);
+      assert(file.path);
+      assert(file.contents);
+      let buf = '';
       file.contents.on('data', function(d) {
         buf += d;
       });
       file.contents.on('end', function() {
-        buf.should.equal('Hello world!');
+        assert.equal(buf, 'Hello world!');
         cb();
       });
-      path.join(file.path, '').should.equal(path.join(__dirname, 'fixtures/test.coffee'));
+      assert.equal(path.join(file.path, ''), path.join(__dirname, 'fixtures/test.coffee'));
     });
   });
 
   it('should return an input stream from a deep glob', function(cb) {
-    var stream = pages.src(path.join(__dirname, 'fixtures/**/*.jade'));
+    const stream = pages.src(path.join(__dirname, 'fixtures/**/*.jade'));
     stream.on('error', cb);
     stream.on('data', function(file) {
-      should.exist(file);
-      should.exist(file.path);
-      should.exist(file.contents);
-      path.join(file.path, '').should.equal(path.join(__dirname, 'fixtures/test/run.jade'));
-      String(file.contents).should.equal('test template');
+      assert(file);
+      assert(file.path);
+      assert(file.contents);
+      assert.equal(path.join(file.path, ''), path.join(__dirname, 'fixtures/test/run.jade'));
+      assert.equal(String(file.contents), 'test template');
     });
-    stream.on('end', function() {
-      cb();
-    });
+
+    stream.on('end', cb);
   });
 
   it('should return an input stream from a deeper glob', function(cb) {
-    var stream = pages.src(path.join(__dirname, 'fixtures/**/*.dmc'));
-    var a = 0;
+    const stream = pages.src(path.join(__dirname, 'fixtures/**/*.dmc'));
+    let count = 0;
     stream.on('error', cb);
     stream.on('data', function() {
-      ++a;
+      ++count;
     });
     stream.on('end', function() {
-      a.should.equal(2);
+      assert.equal(count, 2);
       cb();
     });
   });
 
   it('should return a file stream from a flat path', function(cb) {
-    var a = 0;
-    var stream = pages.src(path.join(__dirname, 'fixtures/test.coffee'));
+    const stream = pages.src(path.join(__dirname, 'fixtures/test.coffee'));
+    let count = 0;
+
     stream.on('error', cb);
     stream.on('data', function(file) {
-      ++a;
-      should.exist(file);
-      should.exist(file.path);
-      should.exist(file.contents);
-      path.join(file.path, '').should.equal(path.join(__dirname, 'fixtures/test.coffee'));
-      String(file.contents).should.equal('Hello world!');
+      ++count;
+      assert(file);
+      assert(file.path);
+      assert(file.contents);
+      assert.equal(path.join(file.path, ''), path.join(__dirname, 'fixtures/test.coffee'));
+      assert.equal(String(file.contents), 'Hello world!');
     });
+
     stream.on('end', function() {
-      a.should.equal(1);
+      assert.equal(count, 1);
       cb();
     });
-  });
-
-  it('should return a stream', function(cb) {
-    var stream = pages.src(path.join(__dirname, 'fixtures/*.coffee'));
-    should.exist(stream);
-    should.exist(stream.on);
-    cb();
   });
 
   it('should return an input stream from a flat glob', function(cb) {
-    var stream = pages.src(path.join(__dirname, 'fixtures/*.coffee'));
+    const stream = pages.src(path.join(__dirname, 'fixtures/*.coffee'));
     stream.on('error', cb);
     stream.on('data', function(file) {
-      should.exist(file);
-      should.exist(file.path);
-      should.exist(file.contents);
-      path.join(file.path, '').should.equal(path.join(__dirname, 'fixtures/test.coffee'));
-      String(file.contents).should.equal('Hello world!');
+      assert(file);
+      assert(file.path);
+      assert(file.contents);
+      assert.equal(path.join(file.path, ''), path.join(__dirname, 'fixtures/test.coffee'));
+      assert.equal(String(file.contents), 'Hello world!');
     });
-    stream.on('end', function() {
-      cb();
-    });
+
+    stream.on('end', cb);
   });
 
   it('should return an input stream for multiple globs', function(cb) {
-    var globArray = [
+    const globArray = [
       path.join(__dirname, 'fixtures/generic/run.dmc'),
       path.join(__dirname, 'fixtures/generic/test.dmc')
     ];
-    var stream = pages.src(globArray);
 
-    var files = [];
+    const stream = pages.src(globArray);
+    const files = [];
+
     stream.on('error', cb);
     stream.on('data', function(file) {
-      should.exist(file);
-      should.exist(file.path);
+      assert(file);
+      assert(file.path);
       files.push(file);
     });
     stream.on('end', function() {
-      files.length.should.equal(2);
-      files[0].path.should.equal(globArray[0]);
-      files[1].path.should.equal(globArray[1]);
+      assert.equal(files.length, 2);
+      assert.equal(files[0].path, globArray[0]);
+      assert.equal(files[1].path, globArray[1]);
       cb();
     });
   });
 
   it('should return an input stream for multiple globs, with negation', function(cb) {
-    var expectedPath = path.join(__dirname, 'fixtures/generic/run.dmc');
-    var globArray = [
+    const expectedPath = path.join(__dirname, 'fixtures/generic/run.dmc');
+    const globArray = [
       path.join(__dirname, 'fixtures/generic/*.dmc'),
-      '!' + path.join(__dirname, 'fixtures/generic/test.dmc'),
+      '!' + path.join(__dirname, 'fixtures/generic/test.dmc')
     ];
-    var stream = pages.src(globArray);
+    const stream = pages.src(globArray);
+    const files = [];
 
-    var files = [];
     stream.on('error', cb);
     stream.on('data', function(file) {
-      should.exist(file);
-      should.exist(file.path);
+      assert(file);
+      assert(file.path);
       files.push(file);
     });
+
     stream.on('end', function() {
-      files.length.should.equal(1);
-      files[0].path.should.equal(expectedPath);
+      assert.equal(files.length, 1);
+      assert.equal(files[0].path, expectedPath);
       cb();
     });
   });
 
   it('should return an input stream with no contents when read is false', function(cb) {
-    var stream = pages.src(path.join(__dirname, 'fixtures/*.coffee'), {read: false});
-    stream.on('error', cb);
+    const stream = pages.src(path.join(__dirname, 'fixtures/*.coffee'), {read: false});
     stream.on('data', function(file) {
-      should.exist(file);
-      should.exist(file.path);
-      should.not.exist(file.contents);
-      path.join(file.path, '').should.equal(path.join(__dirname, 'fixtures/test.coffee'));
+      assert(file);
+      assert(file.path);
+      assert(!file.contents);
+      assert.equal(path.join(file.path, ''), path.join(__dirname, 'fixtures/test.coffee'));
     });
-    stream.on('end', function() {
-      cb();
-    });
+    stream.on('error', cb);
+    stream.on('end', cb);
   });
 
   it('should return an input stream from a deep glob', function(cb) {
-    pages.src(path.join(__dirname, 'fixtures/**/*.jade'))
-      .on('error', cb)
+    let piped = false;
+    pages.src(path.join(__dirname, 'fixtures/*.txt'))
       .on('data', function(file) {
-        should.exist(file);
-        should.exist(file.path);
-        should.exist(file.contents);
-        path.join(file.path, '').should.equal(path.join(__dirname, 'fixtures/test/run.jade'));
-        String(file.contents).should.equal('test template');
+        piped = true;
+        assert(file);
+        assert(file.path);
+        assert(file.contents);
       })
-      .on('end', cb);
+      .on('error', cb)
+      .on('end', function() {
+        assert(piped);
+        cb();
+      });
   });
 
   it('should return an input stream from a deeper glob', function(cb) {
-    var stream = pages.src(path.join(__dirname, 'fixtures/**/*.dmc'));
-    var a = 0;
+    const stream = pages.src(path.join(__dirname, 'fixtures/**/*.dmc'));
+    let count = 0;
     stream.on('error', cb);
     stream.on('data', function() {
-      ++a;
+      ++count;
     });
     stream.on('end', function() {
-      a.should.equal(2);
+      assert.equal(count, 2);
       cb();
     });
   });
 
   it('should return a file stream from a flat path', function(cb) {
-    var a = 0;
-    var stream = pages.src(path.join(__dirname, 'fixtures/test.coffee'));
+    let count = 0;
+    const stream = pages.src(path.join(__dirname, 'fixtures/test.coffee'));
     stream.on('error', cb);
     stream.on('data', function(file) {
-      ++a;
-      should.exist(file);
-      should.exist(file.path);
-      should.exist(file.contents);
-      path.join(file.path, '').should.equal(path.join(__dirname, 'fixtures/test.coffee'));
-      String(file.contents).should.equal('Hello world!');
+      ++count;
+      assert(file);
+      assert(file.path);
+      assert(file.contents);
+      assert.equal(path.join(file.path, ''), path.join(__dirname, 'fixtures/test.coffee'));
+      assert.equal(String(file.contents), 'Hello world!');
     });
     stream.on('end', function() {
-      a.should.equal(1);
+      assert.equal(count, 1);
       cb();
     });
   });

@@ -344,7 +344,7 @@ describe('source stream', function() {
       buffered[0].path.should.equal(expectedPath);
       buffered[0].isStream().should.equal(true);
 
-      var contentBuffer = new Buffer([]);
+      var contentBuffer = Buffer.from([]);
       var contentBufferStream = through(dataWrap(function(data) {
         contentBuffer = Buffer.concat([contentBuffer, data]);
       }));

@@ -594,7 +594,7 @@ describe('dest stream', function() {
 
     var onEnd = function() {
       buffered.length.should.equal(1);
-      bufEqual(fs.readFileSync(expectedPath), new Buffer(existingContents)).should.equal(true);
+      bufEqual(fs.readFileSync(expectedPath), Buffer.from(existingContents)).should.equal(true);
       done();
     };
 
@@ -630,7 +630,7 @@ describe('dest stream', function() {
 
     var onEnd = function() {
       buffered.length.should.equal(1);
-      bufEqual(fs.readFileSync(expectedPath), new Buffer(inputContents)).should.equal(true);
+      bufEqual(fs.readFileSync(expectedPath), Buffer.from(inputContents)).should.equal(true);
       done();
     };
 
@@ -666,7 +666,7 @@ describe('dest stream', function() {
 
     var onEnd = function() {
       buffered.length.should.equal(1);
-      bufEqual(fs.readFileSync(expectedPath), new Buffer(existingContents)).should.equal(true);
+      bufEqual(fs.readFileSync(expectedPath), Buffer.from(existingContents)).should.equal(true);
       done();
     };
 
@@ -704,7 +704,7 @@ describe('dest stream', function() {
 
     var onEnd = function() {
       buffered.length.should.equal(1);
-      bufEqual(fs.readFileSync(expectedPath), new Buffer(inputContents)).should.equal(true);
+      bufEqual(fs.readFileSync(expectedPath), Buffer.from(inputContents)).should.equal(true);
       done();
     };
 
@@ -770,7 +770,7 @@ describe('dest stream', function() {
     var file = new File({
       path: srcPath,
       cwd: __dirname,
-      contents: new Buffer('1234567890'),
+      contents: Buffer.from('1234567890'),
     });
 
     stream.write(file);
