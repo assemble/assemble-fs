@@ -1,482 +1,406 @@
 'use strict';
 
-var os = require('os');
-var path = require('path');
+const fs = require('graceful-fs');
+const File = require('vinyl');
+const expect = require('expect');
 
-var fs = require('graceful-fs');
-var del = require('delete');
-var File = require('vinyl');
-var expect = require('expect');
-var through = require('through2');
+const cleanup = require('./utils/cleanup');
+const statMode = require('./utils/stat-mode');
+const mockError = require('./utils/mock-error');
+const isWindows = require('./utils/is-windows');
+const applyUmask = require('./utils/apply-umask');
+const always = require('./utils/always');
+const testConstants = require('./utils/test-constants');
 
-var vfs = require('vinyl-fs');
-var constants = require('vinyl-fs/lib/constants');
-
-function wipeOut() {
-  this.timeout(20000);
-
-  expect.restoreSpies();
-
-  // Async del to get sort-of-fix for https://github.com/isaacs/rimraf/issues/72
-  return del.promise(path.join(__dirname, './fixtures/highwatermark'))
-    .then(function() {
-      return del.promise(path.join(__dirname, './out-fixtures/'));
-    });
-}
-
-var MASK_MODE = parseInt('7777', 8);
-
-function masked(mode) {
-  return mode & MASK_MODE;
-}
-
-var isWindows = (os.platform() === 'win32');
-var isDarwin = (os.platform() === 'darwin');
+const { concat, from, pipe } = require('mississippi');
+const inputBase = testConstants.inputBase;
+const outputBase = testConstants.outputBase;
+const inputPath = testConstants.inputPath;
+const outputPath = testConstants.outputPath;
+const inputDirpath = testConstants.inputDirpath;
+const outputDirpath = testConstants.outputDirpath;
+const inputNestedPath = testConstants.inputNestedPath;
+const outputNestedPath = testConstants.outputNestedPath;
+const contents = testConstants.contents;
+const clean = cleanup(outputBase);
+const App = require('templates');
+let plugin = require('../..');
+let vfs;
 
 describe('.dest() with custom modes', function() {
-  beforeEach(wipeOut);
-  afterEach(wipeOut);
+  beforeEach(() => {
+    vfs = new App();
+    vfs.use(plugin());
+  });
 
-  it('should set the mode of a written buffer file if set on the vinyl object', function(done) {
+  beforeEach(clean);
+  afterEach(clean);
+
+  it('sets the mode of a written buffer file if set on the vinyl object', function(done) {
+    // Changing the mode of a file is not supported by node.js in Windows.
+    // Windows is treated as though it does not have permission to make this operation.
     if (isWindows) {
-      console.log('Changing the mode of a file is not supported by node.js in Windows.');
-      console.log('Windows is treated as though it does not have permission to make this operation.');
       this.skip();
       return;
     }
 
-    var inputPath = path.join(__dirname, './fixtures/test.coffee');
-    var inputBase = path.join(__dirname, './fixtures/');
-    var expectedPath = path.join(__dirname, './out-fixtures/test.coffee');
-    var expectedContents = fs.readFileSync(inputPath);
-    var expectedMode = parseInt('677', 8) & ~process.umask();
-
-    var expectedFile = new File({
+    let expectedMode = applyUmask('677');
+    let file = new File({
       base: inputBase,
-      cwd: __dirname,
       path: inputPath,
-      contents: expectedContents,
+      contents: Buffer.from(contents),
       stat: {
         mode: expectedMode,
       },
     });
 
-    var onEnd = function() {
-      expect(masked(fs.lstatSync(expectedPath).mode).toString(8)).toEqual(expectedMode.toString(8));
-      done();
-    };
+    function assert() {
+      expect(statMode(outputPath)).toEqual(expectedMode);
+    }
 
-    var stream = vfs.dest('./out-fixtures/', { cwd: __dirname });
-    stream.on('end', onEnd);
-    stream.write(expectedFile);
-    stream.end();
+    pipe([
+      from.obj([file]),
+      vfs.dest(outputBase, { cwd: __dirname }),
+      concat(assert),
+    ], done);
   });
 
-
-
-  it('should set the sticky bit on the mode of a written stream file if set on the vinyl object', function(done) {
+  it('sets the sticky bit on the mode of a written stream file if set on the vinyl object', function(done) {
     if (isWindows) {
       this.skip();
       return;
     }
 
-    var inputPath = path.join(__dirname, './fixtures/test.coffee');
-    var inputBase = path.join(__dirname, './fixtures/');
-    var expectedPath = path.join(__dirname, './out-fixtures/test.coffee');
-    var expectedContents = fs.readFileSync(inputPath);
-    var expectedMode = parseInt('1677', 8) & ~process.umask();
+    let expectedMode = applyUmask('1677');
 
-    var contentStream = through.obj();
-    var expectedFile = new File({
+    let file = new File({
       base: inputBase,
-      cwd: __dirname,
       path: inputPath,
-      contents: contentStream,
+      contents: from([contents]),
       stat: {
         mode: expectedMode,
       },
     });
 
-    var onEnd = function() {
-      expect(masked(fs.lstatSync(expectedPath).mode).toString(8)).toEqual(expectedMode.toString(8));
-      done();
-    };
+    function assert() {
+      expect(statMode(outputPath)).toEqual(expectedMode);
+    }
 
-    var stream = vfs.dest('./out-fixtures/', { cwd: __dirname });
-    stream.on('end', onEnd);
-    stream.write(expectedFile);
-    setTimeout(function() {
-      contentStream.write(expectedContents);
-      contentStream.end();
-    }, 100);
-    stream.end();
+    pipe([
+      from.obj([file]),
+      vfs.dest(outputBase, { cwd: __dirname }),
+      concat(assert),
+    ], done);
   });
 
-  it('should set the mode of a written stream file if set on the vinyl object', function(done) {
+  it('sets the mode of a written stream file if set on the vinyl object', function(done) {
     if (isWindows) {
       this.skip();
       return;
     }
 
-    var inputPath = path.join(__dirname, './fixtures/test.coffee');
-    var inputBase = path.join(__dirname, './fixtures/');
-    var expectedPath = path.join(__dirname, './out-fixtures/test.coffee');
-    var expectedContents = fs.readFileSync(inputPath);
-    var expectedMode = parseInt('677', 8) & ~process.umask();
+    let expectedMode = applyUmask('677');
 
-    var contentStream = through.obj();
-    var expectedFile = new File({
+    let file = new File({
       base: inputBase,
-      cwd: __dirname,
       path: inputPath,
-      contents: contentStream,
+      contents: from([contents]),
       stat: {
         mode: expectedMode,
       },
     });
 
-    var onEnd = function() {
-      expect(masked(fs.lstatSync(expectedPath).mode).toString(8)).toEqual(expectedMode.toString(8));
-      done();
-    };
+    function assert() {
+      expect(statMode(outputPath)).toEqual(expectedMode);
+    }
 
-    var stream = vfs.dest('./out-fixtures/', { cwd: __dirname });
-    stream.on('end', onEnd);
-    stream.write(expectedFile);
-    setTimeout(function() {
-      contentStream.write(expectedContents);
-      contentStream.end();
-    }, 100);
-    stream.end();
+    pipe([
+      from.obj([file]),
+      vfs.dest(outputBase, { cwd: __dirname }),
+      concat(assert),
+    ], done);
   });
 
-  it('should set the mode of a written directory if set on the vinyl object', function(done) {
+  it('sets the mode of a written directory if set on the vinyl object', function(done) {
     if (isWindows) {
       this.skip();
       return;
     }
 
-    var inputPath = path.join(__dirname, './fixtures/test');
-    var inputBase = path.join(__dirname, './fixtures/');
-    var expectedPath = path.join(__dirname, './out-fixtures/test');
-    var expectedMode = parseInt('677', 8) & ~process.umask();
+    let expectedMode = applyUmask('677');
 
-    var expectedFile = new File({
+    let file = new File({
       base: inputBase,
-      cwd: __dirname,
-      path: inputPath,
+      path: inputDirpath,
       contents: null,
       stat: {
-        isDirectory: function() {
-          return true;
-        },
+        isDirectory: always(true),
         mode: expectedMode,
       },
     });
 
-    var onEnd = function() {
-      expect(masked(fs.lstatSync(expectedPath).mode).toString(8)).toEqual(expectedMode.toString(8));
-      done();
-    };
+    function assert() {
+      expect(statMode(outputDirpath)).toEqual(expectedMode);
+    }
 
-    var stream = vfs.dest('./out-fixtures/', { cwd: __dirname });
-    stream.on('end', onEnd);
-    stream.write(expectedFile);
-    stream.end();
+    pipe([
+      from.obj([file]),
+      vfs.dest(outputBase, { cwd: __dirname }),
+      concat(assert),
+    ], done);
   });
 
-  it('should set sticky bit on the mode of a written directory if set on the vinyl object', function(done) {
+  it('sets sticky bit on the mode of a written directory if set on the vinyl object', function(done) {
     if (isWindows) {
       this.skip();
       return;
     }
 
-    var inputPath = path.join(__dirname, './fixtures/test');
-    var inputBase = path.join(__dirname, './fixtures/');
-    var expectedPath = path.join(__dirname, './out-fixtures/test');
-    var expectedMode = parseInt('1677', 8) & ~process.umask();
+    let expectedMode = applyUmask('1677');
 
-    var expectedFile = new File({
+    let file = new File({
       base: inputBase,
-      cwd: __dirname,
-      path: inputPath,
+      path: inputDirpath,
       contents: null,
       stat: {
-        isDirectory: function() {
-          return true;
-        },
+        isDirectory: always(true),
         mode: expectedMode,
       },
     });
 
-    var onEnd = function() {
-      expect(masked(fs.lstatSync(expectedPath).mode).toString(8)).toEqual(expectedMode.toString(8));
-      done();
-    };
+    function assert() {
+      expect(statMode(outputDirpath)).toEqual(expectedMode);
+    }
 
-    var stream = vfs.dest('./out-fixtures/', { cwd: __dirname });
-    stream.on('end', onEnd);
-    stream.write(expectedFile);
-    stream.end();
+    pipe([
+      from.obj([file]),
+      vfs.dest(outputBase, { cwd: __dirname }),
+      concat(assert),
+    ], done);
   });
 
-  it('should write new files with the mode specified in options', function(done) {
+  it('writes new files with the mode specified in options', function(done) {
     if (isWindows) {
       this.skip();
       return;
     }
 
-    var inputPath = path.join(__dirname, './fixtures/test.coffee');
-    var inputBase = path.join(__dirname, './fixtures/');
-    var expectedPath = path.join(__dirname, './out-fixtures/test.coffee');
-    var expectedContents = fs.readFileSync(inputPath);
-    var expectedMode = parseInt('777', 8) & ~process.umask();
+    let expectedMode = applyUmask('777');
 
-    var expectedFile = new File({
+    let file = new File({
       base: inputBase,
-      cwd: __dirname,
       path: inputPath,
-      contents: expectedContents,
+      contents: Buffer.from(contents),
     });
 
-    var onEnd = function() {
-      expect(masked(fs.lstatSync(expectedPath).mode).toString(8)).toEqual(expectedMode.toString(8));
-      done();
-    };
+    function assert() {
+      expect(statMode(outputPath)).toEqual(expectedMode);
+    }
 
-    var stream = vfs.dest('./out-fixtures/', { cwd: __dirname, mode: expectedMode });
-    stream.on('end', onEnd);
-    stream.write(expectedFile);
-    stream.end();
+    pipe([
+      from.obj([file]),
+      vfs.dest(outputBase, { cwd: __dirname, mode: expectedMode }),
+      concat(assert),
+    ], done);
   });
 
-  it('should update file mode to match the vinyl mode', function(done) {
+  it('updates the file mode to match the vinyl mode', function(done) {
     if (isWindows) {
       this.skip();
       return;
     }
 
-    var inputPath = path.join(__dirname, './fixtures/test.coffee');
-    var inputBase = path.join(__dirname, './fixtures/');
-    var expectedPath = path.join(__dirname, './out-fixtures/test.coffee');
-    var expectedContents = fs.readFileSync(inputPath);
-    var expectedBase = path.join(__dirname, './out-fixtures');
-    var startMode = parseInt('655', 8);
-    var expectedMode = parseInt('722', 8);
+    let startMode = applyUmask('655');
+    let expectedMode = applyUmask('722');
 
-    var expectedFile = new File({
+    let file = new File({
       base: inputBase,
-      cwd: __dirname,
       path: inputPath,
-      contents: expectedContents,
+      contents: Buffer.from(contents),
       stat: {
         mode: expectedMode,
       },
     });
 
-    var onEnd = function() {
-      expect(masked(fs.lstatSync(expectedPath).mode).toString(8)).toEqual(expectedMode.toString(8));
-      done();
-    };
+    function assert() {
+      expect(statMode(outputPath)).toEqual(expectedMode);
+    }
 
-    fs.mkdirSync(expectedBase);
-    fs.closeSync(fs.openSync(expectedPath, 'w'));
-    fs.chmodSync(expectedPath, startMode);
+    fs.mkdirSync(outputBase);
+    fs.closeSync(fs.openSync(outputPath, 'w'));
+    fs.chmodSync(outputPath, startMode);
 
-    var stream = vfs.dest('./out-fixtures/', { cwd: __dirname });
-    stream.on('end', onEnd);
-    stream.write(expectedFile);
-    stream.end();
+    pipe([
+      from.obj([file]),
+      vfs.dest(outputBase, { cwd: __dirname }),
+      concat(assert),
+    ], done);
   });
 
-  it('should update directory mode to match the vinyl mode', function(done) {
+  it('updates the directory mode to match the vinyl mode', function(done) {
     if (isWindows) {
       this.skip();
       return;
     }
 
-    var inputBase = path.join(__dirname, './fixtures/');
-    var inputPath = path.join(__dirname, './fixtures/wow');
-    var expectedPath = path.join(__dirname, './out-fixtures/wow');
-    var expectedBase = path.join(__dirname, './out-fixtures');
+    let startMode = applyUmask('2777');
+    let expectedMode = applyUmask('727');
 
-    var firstFile = new File({
+    let file1 = new File({
       base: inputBase,
-      cwd: __dirname,
-      path: expectedPath,
-      stat: fs.statSync(inputPath),
+      path: outputDirpath,
+      stat: {
+        isDirectory: always(true),
+        mode: startMode,
+      },
     });
-    var startMode = firstFile.stat.mode;
-    var expectedMode = parseInt('727', 8);
+    let file2 = new File({
+      base: inputBase,
+      path: outputDirpath,
+      stat: {
+        isDirectory: always(true),
+        mode: expectedMode,
+      },
+    });
 
-    var expectedFile = new File(firstFile);
-    expectedFile.stat.mode = (startMode & ~parseInt('7777', 8)) | expectedMode;
+    function assert() {
+      expect(statMode(outputDirpath)).toEqual(expectedMode);
+    }
 
-    var onEnd = function() {
-      expect(masked(fs.lstatSync(expectedPath).mode).toString(8)).toEqual(expectedMode.toString(8));
-      done();
-    };
-
-    fs.mkdirSync(expectedBase);
-
-    var stream = vfs.dest('./out-fixtures/', { cwd: __dirname });
-    stream.on('end', onEnd);
-    stream.write(firstFile);
-    stream.write(expectedFile);
-    stream.end();
+    pipe([
+      from.obj([file1, file2]),
+      vfs.dest(outputBase, { cwd: __dirname }),
+      concat(assert),
+    ], done);
   });
 
-  it('should use different modes for files and directories', function(done) {
+  it('uses different modes for files and directories', function(done) {
     if (isWindows) {
       this.skip();
       return;
     }
 
-    var inputBase = path.join(__dirname, './fixtures');
-    var inputPath = path.join(__dirname, './fixtures/wow/suchempty');
-    var expectedBase = path.join(__dirname, './out-fixtures/wow');
-    var expectedPath = path.join(__dirname, './out-fixtures/wow/suchempty');
-    var expectedDirMode = parseInt('2777', 8) & ~process.umask();
-    var expectedFileMode = constants.DEFAULT_FILE_MODE & ~process.umask();
+    let expectedDirMode = applyUmask('2777');
+    let expectedFileMode = applyUmask('755');
 
-    var firstFile = new File({
+    let file = new File({
       base: inputBase,
-      cwd: __dirname,
+      path: inputNestedPath,
+      contents: Buffer.from(contents),
+    });
+
+    function assert() {
+      expect(statMode(outputDirpath)).toEqual(expectedDirMode);
+      expect(statMode(outputNestedPath)).toEqual(expectedFileMode);
+    }
+
+    pipe([
+      from.obj([file]),
+      vfs.dest(outputBase, {
+        cwd: __dirname,
+        mode: expectedFileMode,
+        dirMode: expectedDirMode,
+      }),
+      concat(assert),
+    ], done);
+  });
+
+  it('does not fchmod a matching file', function(done) {
+    if (isWindows) {
+      this.skip();
+      return;
+    }
+
+    let fchmodSpy = expect.spyOn(fs, 'fchmod').andCallThrough();
+
+    let expectedMode = applyUmask('777');
+
+    let file = new File({
+      base: inputBase,
       path: inputPath,
-      contents: fs.readFileSync(inputPath),
-      stat: fs.statSync(inputPath),
-    });
-
-    var onEnd = function() {
-      expect(masked(fs.lstatSync(expectedBase).mode).toString(8)).toEqual(expectedDirMode.toString(8));
-      expect(masked(fs.lstatSync(expectedPath).mode).toString(8)).toEqual(expectedFileMode.toString(8));
-      done();
-    };
-
-    var stream = vfs.dest('./out-fixtures/', {
-      cwd: __dirname,
-      mode: expectedFileMode,
-      dirMode: expectedDirMode,
-    });
-    stream.on('end', onEnd);
-    stream.write(firstFile);
-    stream.end();
-  });
-
-  it('should not fchmod a matching file', function(done) {
-    if (isWindows) {
-      this.skip();
-      return;
-    }
-
-    var fchmodSpy = expect.spyOn(fs, 'fchmod').andCallThrough();
-
-    var inputPath = path.join(__dirname, './fixtures/test.coffee');
-    var inputBase = path.join(__dirname, './fixtures/');
-    var expectedPath = path.join(__dirname, './out-fixtures/test.coffee');
-    var expectedContents = fs.readFileSync(inputPath);
-    var expectedMode = parseInt('777', 8)  & ~process.umask();
-
-    var expectedFile = new File({
-      base: inputBase,
-      cwd: __dirname,
-      path: inputPath,
-      contents: expectedContents,
+      contents: Buffer.from(contents),
       stat: {
         mode: expectedMode,
       },
     });
 
-    var onEnd = function() {
+    function assert() {
       expect(fchmodSpy.calls.length).toEqual(0);
-      expect(masked(fs.lstatSync(expectedPath).mode).toString(8)).toEqual(expectedMode.toString(8));
-      done();
-    };
+      expect(statMode(outputPath)).toEqual(expectedMode);
+    }
 
-    var stream = vfs.dest('./out-fixtures/', { cwd: __dirname });
-    stream.on('end', onEnd);
-    stream.write(expectedFile);
-    stream.end();
+    pipe([
+      from.obj([file]),
+      vfs.dest(outputBase, { cwd: __dirname }),
+      concat(assert),
+    ], done);
   });
 
-  it('should see a file with special chmod (setuid/setgid/sticky) as distinct', function(done) {
+  it('sees a file with special chmod (setuid/setgid/sticky) as distinct', function(done) {
     if (isWindows) {
       this.skip();
       return;
     }
 
-    var fchmodSpy = expect.spyOn(fs, 'fchmod').andCallThrough();
+    let fchmodSpy = expect.spyOn(fs, 'fchmod').andCallThrough();
 
-    var inputPath = path.join(__dirname, './fixtures/test.coffee');
-    var inputBase = path.join(__dirname, './fixtures/');
-    var expectedPath = path.join(__dirname, './out-fixtures/test.coffee');
-    var expectedContents = fs.readFileSync(inputPath);
-    var expectedBase = path.join(__dirname, './out-fixtures');
-    var expectedMode = parseInt('3722', 8);
-    var normalMode = parseInt('722', 8);
+    let startMode = applyUmask('3722');
+    let expectedMode = applyUmask('722');
 
-    var expectedFile = new File({
+    let file = new File({
       base: inputBase,
-      cwd: __dirname,
       path: inputPath,
-      contents: expectedContents,
-      stat: {
-        mode: normalMode,
-      },
-    });
-
-    var onEnd = function() {
-      expect(fchmodSpy.calls.length).toEqual(1);
-      done();
-    };
-
-    fs.mkdirSync(expectedBase);
-    fs.closeSync(fs.openSync(expectedPath, 'w'));
-    fs.chmodSync(expectedPath, expectedMode);
-
-    var stream = vfs.dest('./out-fixtures/', { cwd: __dirname });
-    stream.on('end', onEnd);
-    stream.write(expectedFile);
-    stream.end();
-  });
-
-  it('should report fchmod errors', function(done) {
-    if (isWindows) {
-      this.skip();
-      return;
-    }
-
-    var inputPath = path.join(__dirname, './fixtures/test.coffee');
-    var inputBase = path.join(__dirname, './fixtures/');
-    var expectedPath = path.join(__dirname, './out-fixtures/test.coffee');
-    var expectedContents = fs.readFileSync(inputPath);
-    var expectedBase = path.join(__dirname, './out-fixtures');
-    var expectedMode = parseInt('722', 8);
-
-    var fchmodSpy = expect.spyOn(fs, 'fchmod').andCall(function() {
-      var callback = arguments[arguments.length - 1];
-      callback(new Error('mocked error'));
-    });
-
-    var expectedFile = new File({
-      base: inputBase,
-      cwd: __dirname,
-      path: inputPath,
-      contents: expectedContents,
+      contents: Buffer.from(contents),
       stat: {
         mode: expectedMode,
       },
     });
 
-    fs.mkdirSync(expectedBase);
-    fs.closeSync(fs.openSync(expectedPath, 'w'));
+    function assert() {
+      expect(fchmodSpy.calls.length).toEqual(1);
+    }
 
-    var stream = vfs.dest('./out-fixtures/', { cwd: __dirname });
-    stream.on('error', function(err) {
+    fs.mkdirSync(outputBase);
+    fs.closeSync(fs.openSync(outputPath, 'w'));
+    fs.chmodSync(outputPath, startMode);
+
+    pipe([
+      from.obj([file]),
+      vfs.dest(outputBase, { cwd: __dirname }),
+      concat(assert),
+    ], done);
+  });
+
+  it('reports fchmod errors', function(done) {
+    if (isWindows) {
+      this.skip();
+      return;
+    }
+
+    let expectedMode = applyUmask('722');
+    let fchmodSpy = expect.spyOn(fs, 'fchmod').andCall(mockError);
+
+    let file = new File({
+      base: inputBase,
+      path: inputPath,
+      contents: Buffer.from(contents),
+      stat: {
+        mode: expectedMode,
+      },
+    });
+
+    function assert(err) {
       expect(err).toExist();
       expect(fchmodSpy.calls.length).toEqual(1);
       done();
-    });
-    stream.write(expectedFile);
+    }
+
+    fs.mkdirSync(outputBase);
+    fs.closeSync(fs.openSync(outputPath, 'w'));
+
+    pipe([
+      from.obj([file]),
+      vfs.dest(outputBase, { cwd: __dirname }),
+    ], assert);
   });
 });

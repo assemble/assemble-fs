@@ -6,14 +6,14 @@ const App = require('templates');
 const vfs = require('..');
 let app;
 
-describe('src()', function() {
-  beforeEach(function() {
+describe('src()', () => {
+  beforeEach(() => {
     app = new App();
     app.create('pages');
     app.use(vfs());
   });
 
-  it('should return a stream', function(cb) {
+  it('should return a stream', cb => {
     const stream = app.src(path.join(__dirname, 'fixtures/*.coffee'));
     assert(stream);
     assert.equal(typeof stream.on, 'function');
@@ -21,10 +21,10 @@ describe('src()', function() {
     cb();
   });
 
-  it('should return an input stream from a flat glob', function(cb) {
+  it('should return an input stream from a flat glob', cb => {
     const stream = app.src(path.join(__dirname, 'fixtures/*.coffee'));
     stream.on('error', cb);
-    stream.on('data', function(file) {
+    stream.on('data', file => {
       assert(file);
       assert(file.path);
       assert(file.contents);
@@ -34,44 +34,7 @@ describe('src()', function() {
     stream.on('end', cb);
   });
 
-  it('should add files to an existing collection', function(cb) {
-    app.create('files');
-    app.files('foo', { content: 'this is content' });
-
-    const stream = app.src(path.join(__dirname, 'fixtures/test.coffee'), { collection: 'files' });
-    stream.on('error', cb);
-    stream.on('data', function(file) {
-      assert(file);
-      assert(file.path);
-      assert(file.contents);
-      assert.equal(path.join(file.path, ''), path.join(__dirname, 'fixtures/test.coffee'));
-      assert.equal(String(file.contents), 'Hello world!');
-    });
-
-    stream.on('end', function() {
-      assert.equal(app.views.get('files').size, 2);
-      cb();
-    });
-  });
-
-  it('should add files to a new specified collection', function(cb) {
-    var stream = app.src(path.join(__dirname, 'fixtures/test.coffee'), { collection: 'docs' });
-    stream.on('error', cb);
-    stream.on('data', function(file) {
-      assert(file);
-      assert(file.path);
-      assert(file.contents);
-      assert.equal(path.join(file.path, ''), path.join(__dirname, 'fixtures/test.coffee'));
-      assert.equal(String(file.contents), 'Hello world!');
-    });
-
-    stream.on('end', function() {
-      assert.equal(app.views.get('docs').size, 1);
-      cb();
-    });
-  });
-
-  it('should return an input stream for multiple globs', function(cb) {
+  it('should return an input stream for multiple globs', cb => {
     const globs = [
       path.join(__dirname, 'fixtures/generic/run.dmc'),
       path.join(__dirname, 'fixtures/generic/test.dmc')
@@ -81,13 +44,13 @@ describe('src()', function() {
     const files = [];
 
     stream.on('error', cb);
-    stream.on('data', function(file) {
+    stream.on('data', file => {
       assert(file);
       assert(file.path);
       files.push(file);
     });
 
-    stream.on('end', function() {
+    stream.on('end', () => {
       assert.equal(files.length, 2);
       assert.equal(files[0].path, globs[0]);
       assert.equal(files[1].path, globs[1]);
@@ -95,32 +58,32 @@ describe('src()', function() {
     });
   });
 
-  it('should return an input stream for multiple globs with negation', function(cb) {
-    var expectedPath = path.join(__dirname, 'fixtures/generic/run.dmc');
-    var globArray = [
+  it('should return an input stream for multiple globs with negation', cb => {
+    let expectedPath = path.join(__dirname, 'fixtures/generic/run.dmc');
+    let globArray = [
       path.join(__dirname, 'fixtures/generic/*.dmc'),
       '!' + path.join(__dirname, 'fixtures/generic/test.dmc')
     ];
-    var stream = app.src(globArray);
+    let stream = app.src(globArray);
 
-    var files = [];
+    let files = [];
     stream.on('error', cb);
-    stream.on('data', function(file) {
+    stream.on('data', file => {
       assert(file);
       assert(file.path);
       files.push(file);
     });
-    stream.on('end', function() {
+    stream.on('end', () => {
       assert.equal(files.length, 1);
       assert.equal(files[0].path, expectedPath);
       cb();
     });
   });
 
-  it('should return an input stream with no contents when read is false', function(cb) {
+  it('should return an input stream with no contents when read is false', cb => {
     app.src(path.join(__dirname, 'fixtures/*.coffee'), { read: false })
       .on('error', cb)
-      .on('data', function(file) {
+      .on('data', file => {
         assert(file);
         assert(file.path);
         assert(!file.contents);
@@ -129,26 +92,26 @@ describe('src()', function() {
       .on('end', cb);
   });
 
-  it('should not blow up when no files are matched', function(cb) {
+  it('should not blow up when no files are matched', cb => {
     app
       .src(['test.js', 'foo/*.js'])
       .on('error', cb)
-      .on('data', function() {})
+      .on('data', () => {})
       .on('end', cb);
   });
 
-  it('should return an input stream with contents as stream when buffer is false', function(cb) {
-    var stream = app.src(path.join(__dirname, 'fixtures/*.coffee'), { buffer: false });
+  it('should return an input stream with contents as stream when buffer is false', cb => {
+    let stream = app.src(path.join(__dirname, 'fixtures/*.coffee'), { buffer: false });
     stream.on('error', cb);
-    stream.on('data', function(file) {
+    stream.on('data', file => {
       assert(file);
       assert(file.path);
       assert(file.contents);
-      var buf = '';
+      let buf = '';
       file.contents.on('data', function(d) {
         buf += d;
       });
-      file.contents.on('end', function() {
+      file.contents.on('end', () => {
         assert.equal(buf, 'Hello world!');
         cb();
       });
@@ -156,10 +119,10 @@ describe('src()', function() {
     });
   });
 
-  it('should return an input stream from a deep glob', function(cb) {
-    var stream = app.src(path.join(__dirname, 'fixtures/**/*.jade'));
+  it('should return an input stream from a deep glob', cb => {
+    let stream = app.src(path.join(__dirname, 'fixtures/**/*.jade'));
     stream.on('error', cb);
-    stream.on('data', function(file) {
+    stream.on('data', file => {
       assert(file);
       assert(file.path);
       assert(file.contents);
@@ -169,24 +132,24 @@ describe('src()', function() {
     stream.on('end', cb);
   });
 
-  it('should return an input stream from a deeper glob', function(cb) {
-    var stream = app.src(path.join(__dirname, 'fixtures/**/*.dmc'));
-    var a = 0;
+  it('should return an input stream from a deeper glob', cb => {
+    let stream = app.src(path.join(__dirname, 'fixtures/**/*.dmc'));
+    let a = 0;
     stream.on('error', cb);
-    stream.on('data', function() {
+    stream.on('data', () => {
       ++a;
     });
-    stream.on('end', function() {
+    stream.on('end', () => {
       assert.equal(a, 2);
       cb();
     });
   });
 
-  it('should return a file stream from a flat path', function(cb) {
-    var a = 0;
-    var stream = app.src(path.join(__dirname, 'fixtures/test.coffee'));
+  it('should return a file stream from a flat path', cb => {
+    let a = 0;
+    let stream = app.src(path.join(__dirname, 'fixtures/test.coffee'));
     stream.on('error', cb);
-    stream.on('data', function(file) {
+    stream.on('data', file => {
       ++a;
       assert(file);
       assert(file.path);
@@ -194,23 +157,23 @@ describe('src()', function() {
       assert.equal(path.join(file.path, ''), path.join(__dirname, 'fixtures/test.coffee'));
       assert.equal(String(file.contents), 'Hello world!');
     });
-    stream.on('end', function() {
+    stream.on('end', () => {
       assert.equal(a, 1);
       cb();
     });
   });
 
-  it('should return a stream', function(cb) {
-    var stream = app.src(path.join(__dirname, 'fixtures/*.coffee'));
+  it('should return a stream', cb => {
+    let stream = app.src(path.join(__dirname, 'fixtures/*.coffee'));
     assert(stream);
     assert(stream.on);
     cb();
   });
 
-  it('should return an input stream from a flat glob', function(cb) {
-    var stream = app.src(path.join(__dirname, 'fixtures/*.coffee'));
+  it('should return an input stream from a flat glob', cb => {
+    let stream = app.src(path.join(__dirname, 'fixtures/*.coffee'));
     stream.on('error', cb);
-    stream.on('data', function(file) {
+    stream.on('data', file => {
       assert(file);
       assert(file.path);
       assert(file.contents);
@@ -220,32 +183,32 @@ describe('src()', function() {
     stream.on('end', cb);
   });
 
-  it('should return an input stream for multiple globs, with negation', function(cb) {
-    var expectedPath = path.join(__dirname, 'fixtures/generic/run.dmc');
-    var globArray = [
+  it('should return an input stream for multiple globs, with negation', cb => {
+    let expectedPath = path.join(__dirname, 'fixtures/generic/run.dmc');
+    let globArray = [
       path.join(__dirname, 'fixtures/generic/*.dmc'),
       '!' + path.join(__dirname, 'fixtures/generic/test.dmc')
     ];
-    var stream = app.src(globArray);
+    let stream = app.src(globArray);
 
-    var files = [];
+    let files = [];
     stream.on('error', cb);
-    stream.on('data', function(file) {
+    stream.on('data', file => {
       assert(file);
       assert(file.path);
       files.push(file);
     });
-    stream.on('end', function() {
+    stream.on('end', () => {
       assert.equal(files.length, 1);
       assert.equal(files[0].path, expectedPath);
       cb();
     });
   });
 
-  it('should return an input stream with no contents when read is false', function(cb) {
-    var stream = app.src(path.join(__dirname, 'fixtures/*.coffee'), { read: false });
+  it('should return an input stream with no contents when read is false', cb => {
+    let stream = app.src(path.join(__dirname, 'fixtures/*.coffee'), { read: false });
     stream.on('error', cb);
-    stream.on('data', function(file) {
+    stream.on('data', file => {
       assert(file);
       assert(file.path);
       assert(!file.contents);
@@ -254,40 +217,40 @@ describe('src()', function() {
     stream.on('end', cb);
   });
 
-  it('should return an input stream from a deep glob', function(cb) {
+  it('should return an input stream from a deep glob', cb => {
     app
       .src(path.join(__dirname, 'fixtures/**/*.jade'))
       .on('error', cb)
-      .on('data', function(file) {
+      .on('data', file => {
         assert(file);
         assert(file.path);
         assert(file.contents);
         assert.equal(path.join(file.path, ''), path.join(__dirname, 'fixtures/test/run.jade'));
         assert.equal(String(file.contents), 'test template');
       })
-      .on('end', function() {
+      .on('end', () => {
         cb();
       });
   });
 
-  it('should return an input stream from a deeper glob', function(cb) {
-    var stream = app.src(path.join(__dirname, 'fixtures/**/*.dmc'));
-    var a = 0;
+  it('should return an input stream from a deeper glob', cb => {
+    let stream = app.src(path.join(__dirname, 'fixtures/**/*.dmc'));
+    let a = 0;
     stream.on('error', cb);
-    stream.on('data', function() {
+    stream.on('data', () => {
       ++a;
     });
-    stream.on('end', function() {
+    stream.on('end', () => {
       assert.equal(a, 2);
       cb();
     });
   });
 
-  it('should return a file stream from a flat path', function(cb) {
-    var a = 0;
-    var stream = app.src(path.join(__dirname, 'fixtures/test.coffee'));
+  it('should return a file stream from a flat path', cb => {
+    let a = 0;
+    let stream = app.src(path.join(__dirname, 'fixtures/test.coffee'));
     stream.on('error', cb);
-    stream.on('data', function(file) {
+    stream.on('data', file => {
       ++a;
       assert(file);
       assert(file.path);
@@ -295,7 +258,7 @@ describe('src()', function() {
       assert.equal(path.join(file.path, ''), path.join(__dirname, 'fixtures/test.coffee'));
       assert.equal(String(file.contents), 'Hello world!');
     });
-    stream.on('end', function() {
+    stream.on('end', () => {
       assert.equal(a, 1);
       cb();
     });

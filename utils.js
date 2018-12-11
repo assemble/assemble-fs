@@ -2,25 +2,15 @@
 
 const path = require('path');
 const assign = Object.assign;
-const noop = (data, enc, next) => next(null, data);
 const { Transform } = require('readable-stream');
-const utils = exports = module.exports;
+const noop = (data, enc, next) => next(null, data);
+const define = (obj, key, fn) => Reflect.defineProperty(obj, key, { get: fn });
 
-define(utils, 'vfs', () => require('vinyl-fs'));
-define(utils, 'combine', () => require('stream-combiner'));
-
-function define(obj, key, fn) {
-  Reflect.defineProperty(obj, key, { get: fn });
-}
-
-utils.define = function(obj, key, value) {
-  Reflect.defineProperty(obj, key, {
-    configurable: true,
-    enumerable: false,
-    writable: true,
-    value
-  });
-};
+define(exports, 'combine', () => require('stream-combiner'));
+define(exports, 'vfs', () => require('vinyl-fs'));
+define(exports, 'src', () => require('vinyl-fs/lib/src'));
+define(exports, 'dest', () => require('vinyl-fs/lib/dest'));
+define(exports, 'symlink', () => require('vinyl-fs/lib/dest'));
 
 /**
  * This function does all of the path-specific operations that
@@ -39,8 +29,8 @@ utils.define = function(obj, key, value) {
  * @param {Object} options
  */
 
-utils.prepare = function(app, view, dest, options = {}) {
-  if (view.preparedDest) return;
+exports.prepare = function(app, view, dest, options = {}) {
+  if (view.preparedDest === true) return;
   const file = new view.constructor(view);
   const cwd = app.paths.templates;
 
@@ -74,7 +64,7 @@ utils.prepare = function(app, view, dest, options = {}) {
  * so that views can render relative paths.
  */
 
-utils.prepareDest = function fn(app, dest, options) {
+exports.prepareDest = function fn(app, dest, options) {
   app.emit('dest', dest, options);
 
   const appOpts = assign({}, this.options);
@@ -88,14 +78,14 @@ utils.prepareDest = function fn(app, dest, options) {
   }
 
   fn.prepare = function(view) {
-    const data = utils.prepare(app, view, dest, opts);
+    const data = exports.prepare(app, view, dest, opts);
     view.data = assign({}, view.data, data);
   };
 
   app.on('prepareDest', fn.prepare);
 };
 
-utils.through = function(options, transform, flush) {
+exports.through = function(options, transform, flush) {
   if (typeof options === 'function') {
     flush = transform;
     transform = options;
@@ -116,7 +106,7 @@ utils.through = function(options, transform, flush) {
   return stream;
 };
 
-utils.through.obj = (options, transform, flush) => {
+exports.through.obj = (options, transform, flush) => {
   if (typeof options === 'function') {
     flush = transform;
     transform = options;
@@ -124,6 +114,14 @@ utils.through.obj = (options, transform, flush) => {
   }
 
   const opts = Object.assign({ objectMode: true, highWaterMark: 16 }, options);
-  return utils.through(opts, transform, flush);
+  return exports.through(opts, transform, flush);
 };
 
+exports.define = function(obj, key, value) {
+  Reflect.defineProperty(obj, key, {
+    configurable: true,
+    enumerable: false,
+    writable: true,
+    value
+  });
+};

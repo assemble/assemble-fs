@@ -1,223 +1,213 @@
 'use strict';
 
-var os = require('os');
-var path = require('path');
+const fs = require('graceful-fs');
+const File = require('vinyl');
+const expect = require('expect');
+const cleanup = require('./utils/cleanup');
+const isWindows = require('./utils/is-windows');
+const testConstants = require('./utils/test-constants');
+const { concat, from, pipe } = require('mississippi');
 
-var fs = require('graceful-fs');
-var del = require('delete');
-var File = require('vinyl');
-var expect = require('expect');
-
-var vfs = require('vinyl-fs');
-
-function wipeOut() {
-  this.timeout(20000);
-
-  expect.restoreSpies();
-
-  // Async del to get sort-of-fix for https://github.com/isaacs/rimraf/issues/72
-  return del(path.join(__dirname, './out-fixtures/'));
-}
-
-var isWindows = (os.platform() === 'win32');
+const inputBase = testConstants.inputBase;
+const outputBase = testConstants.outputBase;
+const inputPath = testConstants.inputPath;
+const outputPath = testConstants.outputPath;
+const contents = testConstants.contents;
+const clean = cleanup(outputBase);
+const App = require('templates');
+let plugin = require('../..');
+let vfs;
 
 describe('.dest() with custom times', function() {
-  beforeEach(wipeOut);
-  afterEach(wipeOut);
+  beforeEach(() => {
+    vfs = new App();
+    vfs.use(plugin());
+  });
 
-  it('should not call futimes when no mtime is provided on the vinyl stat', function(done) {
+  beforeEach(clean);
+  afterEach(clean);
+
+  it('does not call futimes when no mtime is provided on the vinyl stat', function(done) {
+    // Changing the time of a directory errors in Windows.
+    // Windows is treated as though it does not have permission to make this operation.
     if (isWindows) {
-      console.log('Changing the time of a directory errors in Windows.');
-      console.log('Windows is treated as though it does not have permission to make this operation.');
       this.skip();
       return;
     }
 
-    var inputPath = path.join(__dirname, './fixtures/test.coffee');
-    var inputBase = path.join(__dirname, './fixtures/');
-    var expectedPath = path.join(__dirname, './out-fixtures/test.coffee');
-    var expectedContents = fs.readFileSync(inputPath);
     var earlier = Date.now() - 1001;
 
     var futimesSpy = expect.spyOn(fs, 'futimes').andCallThrough();
 
-    var expectedFile = new File({
+    var file = new File({
       base: inputBase,
-      cwd: __dirname,
       path: inputPath,
-      contents: expectedContents,
+      contents: Buffer.from(contents),
       stat: {},
     });
 
-    var onEnd = function() {
-      var stats = fs.lstatSync(expectedPath);
+    function assert() {
+      var stats = fs.lstatSync(outputPath);
 
       expect(futimesSpy.calls.length).toEqual(0);
       expect(stats.atime.getTime()).toBeGreaterThan(earlier);
       expect(stats.mtime.getTime()).toBeGreaterThan(earlier);
-      done();
-    };
+    }
 
-    var stream = vfs.dest('./out-fixtures/', { cwd: __dirname });
-    stream.on('end', onEnd);
-    stream.write(expectedFile);
-    stream.end();
+    pipe([
+      from.obj([file]),
+      vfs.dest(outputBase, { cwd: __dirname }),
+      concat(assert),
+    ], done);
   });
 
-  it('should call futimes when an mtime is provided on the vinyl stat', function(done) {
+  it('calls futimes when an mtime is provided on the vinyl stat', function(done) {
     if (isWindows) {
       this.skip();
       return;
     }
 
-    var inputPath = path.join(__dirname, './fixtures/test.coffee');
-    var inputBase = path.join(__dirname, './fixtures/');
-    var expectedPath = path.join(__dirname, './out-fixtures/test.coffee');
-    var expectedContents = fs.readFileSync(inputPath);
-    var expectedMtime = fs.lstatSync(inputPath).mtime;
+    // Use new mtime
+    var mtime = new Date(Date.now() - 2048);
 
     var futimesSpy = expect.spyOn(fs, 'futimes').andCallThrough();
 
-    var expectedFile = new File({
+    var file = new File({
       base: inputBase,
-      cwd: __dirname,
       path: inputPath,
-      contents: expectedContents,
+      contents: Buffer.from(contents),
       stat: {
-        mtime: expectedMtime,
+        mtime: mtime,
       },
     });
 
-    var onEnd = function() {
-      var stats = fs.lstatSync(expectedPath);
-
+    function assert() {
       expect(futimesSpy.calls.length).toEqual(1);
-      expect(stats.mtime.getTime()).toEqual(expectedMtime.getTime());
-      expect(expectedFile.stat.mtime).toEqual(expectedMtime);
-      done();
-    };
 
-    var stream = vfs.dest('./out-fixtures/', { cwd: __dirname });
-    stream.on('end', onEnd);
-    stream.write(expectedFile);
-    stream.end();
+      // Compare args instead of fs.lstats(), since mtime may be drifted in x86 Node.js
+      var mtimeSpy = futimesSpy.calls[0].arguments[2];
+
+      expect(mtimeSpy.getTime())
+        .toEqual(mtime.getTime());
+
+      expect(file.stat.mtime).toEqual(mtime);
+    }
+
+    pipe([
+      from.obj([file]),
+      vfs.dest(outputBase, { cwd: __dirname }),
+      concat(assert),
+    ], done);
   });
 
-  it('should not call futimes when provided mtime on the vinyl stat is invalid', function(done) {
+  it('does not call futimes when provided mtime on the vinyl stat is invalid', function(done) {
     if (isWindows) {
       this.skip();
       return;
     }
 
-    var inputPath = path.join(__dirname, './fixtures/test.coffee');
-    var inputBase = path.join(__dirname, './fixtures/');
-    var expectedPath = path.join(__dirname, './out-fixtures/test.coffee');
-    var expectedContents = fs.readFileSync(inputPath);
     var earlier = Date.now() - 1001;
 
     var futimesSpy = expect.spyOn(fs, 'futimes').andCallThrough();
 
-    var expectedFile = new File({
+    var file = new File({
       base: inputBase,
-      cwd: __dirname,
       path: inputPath,
-      contents: expectedContents,
+      contents: Buffer.from(contents),
       stat: {
         mtime: new Date(undefined),
       },
     });
 
-    var onEnd = function() {
-      var stats = fs.lstatSync(expectedPath);
+    function assert() {
+      var stats = fs.lstatSync(outputPath);
 
       expect(futimesSpy.calls.length).toEqual(0);
       expect(stats.mtime.getTime()).toBeGreaterThan(earlier);
-      done();
-    };
+    }
 
-    var stream = vfs.dest('./out-fixtures/', { cwd: __dirname });
-    stream.on('end', onEnd);
-    stream.write(expectedFile);
-    stream.end();
+    pipe([
+      from.obj([file]),
+      vfs.dest(outputBase, { cwd: __dirname }),
+      concat(assert),
+    ], done);
   });
 
-  it('should call futimes when provided mtime on the vinyl stat is valid but provided atime is invalid', function(done) {
+  it('calls futimes when provided mtime on the vinyl stat is valid but provided atime is invalid', function(done) {
     if (isWindows) {
       this.skip();
       return;
     }
 
-    var inputPath = path.join(__dirname, './fixtures/test.coffee');
-    var inputBase = path.join(__dirname, './fixtures/');
-    var expectedPath = path.join(__dirname, './out-fixtures/test.coffee');
-    var expectedContents = fs.readFileSync(inputPath);
-    var expectedMtime = fs.lstatSync(inputPath).mtime;
+    // Use new mtime
+    var mtime = new Date(Date.now() - 2048);
     var invalidAtime = new Date(undefined);
 
     var futimesSpy = expect.spyOn(fs, 'futimes').andCallThrough();
 
-    var expectedFile = new File({
+    var file = new File({
       base: inputBase,
-      cwd: __dirname,
       path: inputPath,
-      contents: expectedContents,
+      contents: Buffer.from(contents),
       stat: {
         atime: invalidAtime,
-        mtime: expectedMtime,
+        mtime: mtime,
       },
     });
 
-    var onEnd = function() {
-      var stats = fs.lstatSync(expectedPath);
-
+    function assert() {
       expect(futimesSpy.calls.length).toEqual(1);
-      expect(stats.mtime.getTime()).toEqual(expectedMtime.getTime());
-      done();
-    };
 
-    var stream = vfs.dest('./out-fixtures/', { cwd: __dirname });
-    stream.on('end', onEnd);
-    stream.write(expectedFile);
-    stream.end();
+      var mtimeSpy = futimesSpy.calls[0].arguments[2];
+
+      expect(mtimeSpy.getTime()).toEqual(mtime.getTime());
+    }
+
+    pipe([
+      from.obj([file]),
+      vfs.dest(outputBase, { cwd: __dirname }),
+      concat(assert),
+    ], done);
   });
 
-  it('should write file atime and mtime using the vinyl stat', function(done) {
+  it('writes file atime and mtime using the vinyl stat', function(done) {
     if (isWindows) {
       this.skip();
       return;
     }
 
-    var inputPath = path.join(__dirname, './fixtures/test.coffee');
-    var inputBase = path.join(__dirname, './fixtures/');
-    var expectedPath = path.join(__dirname, './out-fixtures/test.coffee');
-    var expectedContents = fs.readFileSync(inputPath);
-    var expectedAtime = fs.lstatSync(inputPath).atime;
-    var expectedMtime = fs.lstatSync(inputPath).mtime;
+    // Use new atime/mtime
+    var atime = new Date(Date.now() - 2048);
+    var mtime = new Date(Date.now() - 1024);
 
-    var expectedFile = new File({
+    var futimesSpy = expect.spyOn(fs, 'futimes').andCallThrough();
+
+    var file = new File({
       base: inputBase,
-      cwd: __dirname,
       path: inputPath,
-      contents: expectedContents,
+      contents: Buffer.from(contents),
       stat: {
-        atime: expectedAtime,
-        mtime: expectedMtime,
+        atime: atime,
+        mtime: mtime,
       },
     });
 
-    var onEnd = function() {
-      var stats = fs.lstatSync(expectedPath);
+    function assert() {
+      expect(futimesSpy.calls.length).toEqual(1);
 
-      expect(stats.atime.getTime()).toEqual(expectedAtime.getTime());
-      expect(stats.mtime.getTime()).toEqual(expectedMtime.getTime());
-      expect(expectedFile.stat.mtime).toEqual(expectedMtime);
-      expect(expectedFile.stat.atime).toEqual(expectedAtime);
-      done();
+      var atimeSpy = futimesSpy.calls[0].arguments[1];
+      var mtimeSpy = futimesSpy.calls[0].arguments[2];
+
+      expect(atimeSpy.getTime()).toEqual(atime.getTime());
+      expect(mtimeSpy.getTime()).toEqual(mtime.getTime());
+      expect(file.stat.mtime).toEqual(mtime);
+      expect(file.stat.atime).toEqual(atime);
     };
 
-    var stream = vfs.dest('./out-fixtures/', { cwd: __dirname });
-    stream.on('end', onEnd);
-    stream.write(expectedFile);
-    stream.end();
+    pipe([
+      from.obj([file]),
+      vfs.dest(outputBase, { cwd: __dirname }),
+      concat(assert),
+    ], done);
   });
 });

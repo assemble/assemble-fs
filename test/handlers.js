@@ -8,33 +8,33 @@ const File = require('vinyl');
 const vfs = require('..');
 let app;
 
-describe('handlers', function() {
-  beforeEach(function() {
+describe('handlers', () => {
+  beforeEach(() => {
     app = new App();
     app.use(vfs());
   });
 
-  afterEach(function(cb) {
+  afterEach(cb => {
     rimraf(path.join(__dirname, './out-fixtures/'), cb);
   });
 
-  it('should handle onLoad', function(cb) {
+  it('should handle onLoad', cb => {
     let count = 0;
-    app.onLoad(/./, function(file) {
+    app.onLoad(/./, file => {
       count++;
     });
 
     app.src(path.join(__dirname, './fixtures/vinyl/test.coffee'))
       .pipe(app.dest('./out-fixtures/', {cwd: __dirname}))
-      .on('end', function() {
+      .on('end', () => {
         assert.equal(count, 1);
         cb();
       });
   });
 
-  it('should handle preWrite', function(cb) {
+  it('should handle preWrite', cb => {
     let count = 0;
-    app.preWrite(/./, function(file) {
+    app.preWrite(/./, file => {
       count++;
     });
 
@@ -43,7 +43,7 @@ describe('handlers', function() {
       cwd: __dirname
     });
 
-    stream.once('finish', function() {
+    stream.once('finish', () => {
       assert.equal(count, 1);
       cb();
     });
@@ -58,9 +58,9 @@ describe('handlers', function() {
     stream.end();
   });
 
-  it('should handle postWrite', function(cb) {
+  it('should handle postWrite', cb => {
     let count = 0;
-    app.postWrite(/./, function(file) {
+    app.postWrite(/./, file => {
       count++;
     });
 
@@ -69,7 +69,7 @@ describe('handlers', function() {
       cwd: __dirname
     });
 
-    stream.once('finish', function() {
+    stream.once('finish', () => {
       assert.equal(count, 1);
       cb();
     });
