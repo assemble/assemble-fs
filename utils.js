@@ -10,7 +10,7 @@ define(exports, 'combine', () => require('stream-combiner'));
 define(exports, 'vfs', () => require('vinyl-fs'));
 define(exports, 'src', () => require('vinyl-fs/lib/src'));
 define(exports, 'dest', () => require('vinyl-fs/lib/dest'));
-define(exports, 'symlink', () => require('vinyl-fs/lib/dest'));
+define(exports, 'symlink', () => require('vinyl-fs/lib/symlink'));
 
 /**
  * This function does all of the path-specific operations that
@@ -31,15 +31,15 @@ define(exports, 'symlink', () => require('vinyl-fs/lib/dest'));
 
 exports.prepare = function(app, view, dest, options = {}) {
   if (view.preparedDest === true) return;
-  const file = new view.constructor(view);
-  const cwd = app.paths.templates;
+  let file = new view.constructor(view);
+  let cwd = app.paths.templates;
 
-  const destDir = typeof dest === 'function' ? dest(file) : dest;
+  let destDir = typeof dest === 'function' ? dest(file) : dest;
   if (typeof destDir !== 'string') {
     throw new TypeError('expected destination directory to be a string');
   }
 
-  const baseDir = typeof options.base === 'function'
+  let baseDir = typeof options.base === 'function'
     ? options.base(file)
     : path.resolve(cwd, destDir);
 
@@ -47,8 +47,8 @@ exports.prepare = function(app, view, dest, options = {}) {
     throw new TypeError('expected base directory to be a string');
   }
 
-  const writePath = path.join(destDir, view.basename);
-  const data = {};
+  let writePath = path.join(destDir, view.basename);
+  let data = {};
   data.cwd = cwd;
   data.base = baseDir;
   data.dest = destDir;
@@ -67,25 +67,25 @@ exports.prepare = function(app, view, dest, options = {}) {
 exports.prepareDest = function fn(app, dest, options) {
   app.emit('dest', dest, options);
 
-  const appOpts = assign({}, this.options);
+  let appOpts = assign({}, this.options);
   delete appOpts.engine;
   delete appOpts.tasks;
 
-  const opts = assign({}, appOpts, options);
+  let opts = assign({}, appOpts, options);
 
   if (fn.prepare) {
     app.off('prepareDest', fn.prepare);
   }
 
-  fn.prepare = function(view) {
-    const data = exports.prepare(app, view, dest, opts);
+  fn.prepare = view => {
+    let data = exports.prepare(app, view, dest, opts);
     view.data = assign({}, view.data, data);
   };
 
   app.on('prepareDest', fn.prepare);
 };
 
-exports.through = function(options, transform, flush) {
+exports.through = (options, transform, flush) => {
   if (typeof options === 'function') {
     flush = transform;
     transform = options;
@@ -97,11 +97,11 @@ exports.through = function(options, transform, flush) {
   }
 
   if (transform.length === 2) {
-    const fn = transform;
+    let fn = transform;
     transform = (data, enc, cb) => fn(data, cb);
   }
 
-  const stream = new Transform({ transform, flush, ...options });
+  let stream = new Transform({ transform, flush, ...options });
   stream.setMaxListeners(0);
   return stream;
 };
@@ -113,7 +113,7 @@ exports.through.obj = (options, transform, flush) => {
     options = null;
   }
 
-  const opts = Object.assign({ objectMode: true, highWaterMark: 16 }, options);
+  let opts = Object.assign({ objectMode: true, highWaterMark: 16 }, options);
   return exports.through(opts, transform, flush);
 };
 

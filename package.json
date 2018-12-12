@@ -1,6 +1,6 @@
 {
   "name": "assemble-fs",
-  "description": "Light wrapper for vinyl-fs to support Assemble middleware.",
+  "description": "Light wrapper for vinyl-fs to add streams support in a way that plays nice with Assemble middleware.",
   "version": "2.0.0",
   "homepage": "https://github.com/assemble/assemble-fs",
   "author": "Jon Schlinkert (https://github.com/jonschlinkert)",
@@ -19,20 +19,21 @@
   ],
   "main": "index.js",
   "engines": {
-    "node": ">=4.0"
+    "node": ">=6"
   },
   "scripts": {
-    "test": "mocha"
+    "test": "mocha test/{*.js,vfs/*.js}"
   },
   "dependencies": {
+    "lead": "^1.0.0",
+    "pumpify": "^1.5.1",
     "readable-stream": "^3.0.6",
     "stream-combiner": "^0.2.2",
+    "to-through": "^2.0.0",
     "vinyl-fs": "^3.0.3"
   },
   "devDependencies": {
-    "buffer-equal": "^1.0.0",
     "expect": "^1.19.0",
-    "fs-mkdirp-stream": "^1.0.0",
     "graceful-fs": "^4.1.15",
     "gulp-format-md": "^2.0.0",
     "mississippi": "^3.0.0",
@@ -40,7 +41,6 @@
     "rimraf": "^2.6.2",
     "sinon": "^7.1.1",
     "templates": "file:../../../templates/templates-next",
-    "through2": "^3.0.0",
     "vinyl": "^2.2.0"
   },
   "keywords": [

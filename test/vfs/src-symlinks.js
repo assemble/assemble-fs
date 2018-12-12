@@ -4,7 +4,9 @@ var fs = require('graceful-fs');
 var expect = require('expect');
 var miss = require('mississippi');
 
-var vfs = require('../..');
+const App = require('templates');
+let plugin = require('../..');
+let vfs;
 
 var cleanup = require('./utils/cleanup');
 var testConstants = require('./utils/test-constants');
@@ -27,6 +29,10 @@ var symlinkNestedSecond = testConstants.symlinkNestedSecond;
 var clean = cleanup(outputBase);
 
 describe('.src() with symlinks', function() {
+  beforeEach(() => {
+    vfs = new App();
+    vfs.use(plugin());
+  });
 
   beforeEach(clean);
   afterEach(clean);

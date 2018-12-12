@@ -5,7 +5,9 @@ var File = require('vinyl');
 var expect = require('expect');
 var miss = require('mississippi');
 
-var vfs = require('../..');
+const App = require('templates');
+let plugin = require('../..');
+let vfs;
 
 var cleanup = require('./utils/cleanup');
 var applyUmask = require('./utils/apply-umask');
@@ -22,6 +24,10 @@ var contents = testConstants.contents;
 var clean = cleanup();
 
 describe('.dest() on not owned files', function() {
+  beforeEach(() => {
+    vfs = new App();
+    vfs.use(plugin());
+  });
 
   var fileStats = fs.statSync(notOwnedPath);
 

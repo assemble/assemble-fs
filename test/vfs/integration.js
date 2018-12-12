@@ -6,7 +6,9 @@ var fs = require('graceful-fs');
 var miss = require('mississippi');
 var expect = require('expect');
 
-var vfs = require('../..');
+const App = require('templates');
+let plugin = require('../..');
+let vfs;
 
 var cleanup = require('./utils/cleanup');
 var isWindows = require('./utils/is-windows');
@@ -35,6 +37,10 @@ var content = testConstants.content;
 var clean = cleanup(base);
 
 describe('integrations', function() {
+  beforeEach(() => {
+    vfs = new App();
+    vfs.use(plugin());
+  });
 
   beforeEach(clean);
   afterEach(clean);

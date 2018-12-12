@@ -3,11 +3,14 @@
 var path = require('path');
 
 var fs = require('graceful-fs');
+var assert = require('assert');
 var File = require('vinyl');
 var expect = require('expect');
 var miss = require('mississippi');
 
-var vfs = require('../..');
+const App = require('templates');
+let plugin = require('../..');
+let vfs;
 
 var testConstants = require('./utils/test-constants');
 
@@ -25,13 +28,17 @@ var leEncodedInputPath = testConstants.leEncodedInputPath;
 var contents = testConstants.contents;
 
 describe('.src()', function() {
+  beforeEach(() => {
+    vfs = new App();
+    vfs.use(plugin());
+  });
 
   it('throws on invalid glob (empty)', function(done) {
     var stream;
     try {
       stream = vfs.src();
     } catch (err) {
-      expect(err).toExist();
+      assert(err, 'expected an error');
       expect(stream).toNotExist();
       done();
     }
@@ -42,7 +49,7 @@ describe('.src()', function() {
     try {
       stream = vfs.src('');
     } catch (err) {
-      expect(err).toExist();
+      assert(err, 'expected an error');
       expect(stream).toNotExist();
       done();
     }
@@ -53,7 +60,7 @@ describe('.src()', function() {
     try {
       stream = vfs.src(123);
     } catch (err) {
-      expect(err).toExist();
+      assert(err, 'expected an error');
       expect(stream).toNotExist();
       done();
     }
@@ -64,7 +71,7 @@ describe('.src()', function() {
     try {
       stream = vfs.src([['./fixtures/*.coffee']]);
     } catch (err) {
-      expect(err).toExist();
+      assert(err, 'expected an error');
       expect(stream).toNotExist();
       expect(err.message).toInclude('Invalid glob argument');
       done();
@@ -76,7 +83,7 @@ describe('.src()', function() {
     try {
       stream = vfs.src(['']);
     } catch (err) {
-      expect(err).toExist();
+      assert(err, 'expected an error');
       expect(stream).toNotExist();
       done();
     }
@@ -87,22 +94,21 @@ describe('.src()', function() {
     try {
       stream = vfs.src([]);
     } catch (err) {
-      expect(err).toExist();
+      assert(err, 'expected an error');
       expect(stream).toNotExist();
       done();
     }
   });
 
   it('emits an error on file not existing', function(done) {
-    function assert(err) {
-      expect(err).toExist();
+    function compare(err) {
       done();
     }
 
     pipe([
-      vfs.src('./fixtures/noexist.coffee'),
+      vfs.src('./fixtures/noexist.coffee', { allowEmpty: false }),
       concat(),
-    ], assert);
+    ], compare);
   });
 
   it('passes through writes', function(done) {
@@ -115,7 +121,7 @@ describe('.src()', function() {
 
     var srcStream = vfs.src(inputPath);
 
-    function assert(files) {
+    function compare(files) {
       expect(files.length).toEqual(2);
       expect(files[0]).toEqual(file);
     }
@@ -124,7 +130,7 @@ describe('.src()', function() {
 
     pipe([
       srcStream,
-      concat(assert),
+      concat(compare),
     ], done);
   });
 
@@ -132,28 +138,28 @@ describe('.src()', function() {
     // U+FEFF takes up 3 bytes in UTF-8: http://mothereff.in/utf-8#%EF%BB%BF
     var expectedContent = fs.readFileSync(bomInputPath).slice(3);
 
-    function assert(files) {
+    function compare(files) {
       expect(files.length).toEqual(1);
       expect(files[0].contents).toMatch(expectedContent);
     }
 
     pipe([
       vfs.src(bomInputPath),
-      concat(assert),
+      concat(compare),
     ], done);
   });
 
   it('does not remove BOM from utf8-encoded files if option is false', function(done) {
     var expectedContent = fs.readFileSync(bomInputPath);
 
-    function assert(files) {
+    function compare(files) {
       expect(files.length).toEqual(1);
       expect(files[0].contents).toMatch(expectedContent);
     }
 
     pipe([
       vfs.src(bomInputPath, { removeBOM: false }),
-      concat(assert),
+      concat(compare),
     ], done);
   });
 
@@ -162,34 +168,34 @@ describe('.src()', function() {
   it('does not remove anything that looks like a utf8-encoded BOM from utf16be-encoded files', function(done) {
     var expectedContent = fs.readFileSync(beEncodedInputPath);
 
-    function assert(files) {
+    function compare(files) {
       expect(files.length).toEqual(1);
       expect(files[0].contents).toMatch(expectedContent);
     };
 
     pipe([
       vfs.src(beEncodedInputPath),
-      concat(assert),
+      concat(compare),
     ], done);
   });
 
   it('does not remove anything that looks like a utf8-encoded BOM from utf16be-encoded files with streaming contents', function(done) {
     var expectedContent = fs.readFileSync(beEncodedInputPath);
 
-    function assertContent(contents) {
+    function compareContent(contents) {
       expect(contents).toMatch(expectedContent);
     }
 
     function compareContents(file, enc, cb) {
       pipe([
         file.contents,
-        concat(assertContent),
+        concat(compareContent),
       ], function(err) {
         cb(err, file);
       });
     }
 
-    function assert(files) {
+    function compare(files) {
       expect(files.length).toEqual(1);
       expect(files[0].isStream()).toEqual(true);
     }
@@ -197,7 +203,7 @@ describe('.src()', function() {
     pipe([
       vfs.src(beEncodedInputPath, { buffer: false }),
       through.obj(compareContents),
-      concat(assert),
+      concat(compare),
     ], done);
   });
 
@@ -206,34 +212,34 @@ describe('.src()', function() {
   it('does not remove anything that looks like a utf8-encoded BOM from utf16le-encoded files', function(done) {
     var expectedContent = fs.readFileSync(leEncodedInputPath);
 
-    function assert(files) {
+    function compare(files) {
       expect(files.length).toEqual(1);
       expect(files[0].contents).toMatch(expectedContent);
     }
 
     pipe([
       vfs.src(leEncodedInputPath),
-      concat(assert),
+      concat(compare),
     ], done);
   });
 
   it('does not remove anything that looks like a utf8-encoded BOM from utf16le-encoded files with streaming contents', function(done) {
     var expectedContent = fs.readFileSync(leEncodedInputPath);
 
-    function assertContent(contents) {
+    function compareContent(contents) {
       expect(contents).toMatch(expectedContent);
     }
 
     function compareContents(file, enc, cb) {
       pipe([
         file.contents,
-        concat(assertContent),
+        concat(compareContent),
       ], function(err) {
         cb(err, file);
       });
     }
 
-    function assert(files) {
+    function compare(files) {
       expect(files.length).toEqual(1);
       expect(files[0].isStream()).toEqual(true);
     }
@@ -241,31 +247,31 @@ describe('.src()', function() {
     pipe([
       vfs.src(leEncodedInputPath, { buffer: false }),
       through.obj(compareContents),
-      concat(assert),
+      concat(compare),
     ], done);
   });
 
   it('globs files with default settings', function(done) {
-    function assert(files) {
+    function compare(files) {
       expect(files.length).toEqual(4);
     }
 
     pipe([
       vfs.src('./fixtures/*.txt', { cwd: __dirname }),
-      concat(assert),
+      concat(compare),
     ], done);
   });
 
   it('globs files with default settings and relative cwd', function(done) {
     var cwd = path.relative(process.cwd(), __dirname);
 
-    function assert(files) {
+    function compare(files) {
       expect(files.length).toEqual(4);
     }
 
     pipe([
       vfs.src('./fixtures/*.txt', { cwd: cwd }),
-      concat(assert),
+      concat(compare),
     ], done);
   });
 
@@ -273,7 +279,7 @@ describe('.src()', function() {
   it('globs a directory with default settings', function(done) {
     var inputDirGlob = path.join(inputBase, './f*/');
 
-    function assert(files) {
+    function compare(files) {
       expect(files.length).toEqual(1);
       expect(files[0].isNull()).toEqual(true);
       expect(files[0].isDirectory()).toEqual(true);
@@ -281,14 +287,14 @@ describe('.src()', function() {
 
     pipe([
       vfs.src(inputDirGlob),
-      concat(assert),
+      concat(compare),
     ], done);
   });
 
   it('globs a directory with default settings and relative cwd', function(done) {
     var cwd = path.relative(process.cwd(), __dirname);
 
-    function assert(files) {
+    function compare(files) {
       expect(files.length).toEqual(1);
       expect(files[0].isNull()).toEqual(true);
       expect(files[0].isDirectory()).toEqual(true);
@@ -296,12 +302,12 @@ describe('.src()', function() {
 
     pipe([
       vfs.src('./fixtures/f*/', { cwd: cwd }),
-      concat(assert),
+      concat(compare),
     ], done);
   });
 
   it('streams a directory with default settings', function(done) {
-    function assert(files) {
+    function compare(files) {
       expect(files.length).toEqual(1);
       expect(files[0].path).toEqual(inputDirpath);
       expect(files[0].isNull()).toEqual(true);
@@ -310,12 +316,12 @@ describe('.src()', function() {
 
     pipe([
       vfs.src(inputDirpath),
-      concat(assert),
+      concat(compare),
     ], done);
   });
 
   it('streams file with with no contents using read: false option', function(done) {
-    function assert(files) {
+    function compare(files) {
       expect(files.length).toEqual(1);
       expect(files[0].path).toEqual(inputPath);
       expect(files[0].isNull()).toEqual(true);
@@ -324,54 +330,54 @@ describe('.src()', function() {
 
     pipe([
       vfs.src(inputPath, { read: false }),
-      concat(assert),
+      concat(compare),
     ], done);
   });
 
   it('streams a file changed after since', function(done) {
     var lastUpdateDate = new Date(+fs.statSync(inputPath).mtime - 1000);
 
-    function assert(files) {
+    function compare(files) {
       expect(files.length).toEqual(1);
       expect(files[0].path).toEqual(inputPath);
     }
 
     pipe([
       vfs.src(inputPath, { since: lastUpdateDate }),
-      concat(assert),
+      concat(compare),
     ], done);
   });
 
   it('does not stream a file changed before since', function(done) {
     var lastUpdateDate = new Date(+fs.statSync(inputPath).mtime + 1000);
 
-    function assert(files) {
+    function compare(files) {
       expect(files.length).toEqual(0);
     }
 
     pipe([
       vfs.src(inputPath, { since: lastUpdateDate }),
-      concat(assert),
+      concat(compare),
     ], done);
   });
 
   it('streams a file with streaming contents', function(done) {
     var expectedContent = fs.readFileSync(inputPath);
 
-    function assertContent(contents) {
+    function compareContent(contents) {
       expect(contents).toMatch(expectedContent);
     }
 
     function compareContents(file, enc, cb) {
       pipe([
         file.contents,
-        concat(assertContent),
+        concat(compareContent),
       ], function(err) {
         cb(err, file);
       });
     }
 
-    function assert(files) {
+    function compare(files) {
       expect(files.length).toEqual(1);
       expect(files[0].path).toEqual(inputPath);
       expect(files[0].isStream()).toEqual(true);
@@ -380,7 +386,7 @@ describe('.src()', function() {
     pipe([
       vfs.src(inputPath, { buffer: false }),
       through.obj(compareContents),
-      concat(assert),
+      concat(compare),
     ], done);
   });
 
@@ -392,7 +398,7 @@ describe('.src()', function() {
       stat: fs.statSync(inputPath),
     });
 
-    function assert(files) {
+    function compare(files) {
       expect(files.length).toEqual(2);
       expect(files[0]).toEqual(file);
     }
@@ -400,19 +406,19 @@ describe('.src()', function() {
     pipe([
       from.obj([file]),
       vfs.src(inputPath),
-      concat(assert),
+      concat(compare),
     ], done);
   });
 
   it('can be used at beginning and in the middle', function(done) {
-    function assert(files) {
-      expect(files.length).toEqual(2);
+    function compare(files) {
+      assert.equal(files.length, 2);
     }
 
     pipe([
       vfs.src(inputPath),
       vfs.src(inputPath),
-      concat(assert),
+      concat(compare),
     ], done);
   });
 
@@ -420,14 +426,14 @@ describe('.src()', function() {
     // Reference: https://github.com/gulpjs/vinyl-fs/issues/153
     var read = expect.createSpy().andReturn(false);
 
-    function assert() {
+    function compare() {
       // Called once to resolve the option
       expect(read.calls.length).toEqual(1);
     }
 
     pipe([
       vfs.src(inputPath, { read: read }),
-      concat(assert),
+      concat(compare),
     ], done);
   });
 });

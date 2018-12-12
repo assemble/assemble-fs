@@ -2,6 +2,7 @@
 
 var path = require('path');
 
+var assert = require('assert');
 var fs = require('graceful-fs');
 var File = require('vinyl');
 var expect = require('expect');
@@ -64,24 +65,24 @@ describe('.dest()', function() {
     vfs.use(plugin());
   });
 
-  it('throws on no folder argument', function(done) {
+  it('throws on no folder argument', cb => {
     function noFolder() {
       vfs.dest();
     }
 
     expect(noFolder).toThrow();
-    done();
+    cb();
   });
 
-  it('throws on empty string folder argument', function(done) {
+  it('throws on empty string folder argument', cb => {
     function emptyFolder() {
       vfs.dest('');
     }
     expect(emptyFolder).toThrow();
-    done();
+    cb();
   });
 
-  it('accepts the sourcemap option as true', function(done) {
+  it('accepts the sourcemap option as true', cb => {
     var file = new File({
       base: inputBase,
       path: inputPath,
@@ -89,18 +90,18 @@ describe('.dest()', function() {
       sourceMap: makeSourceMap()
     });
 
-    function assert(files) {
-      expect(files.length).toEqual(1);
+    function compare(files) {
+      assert.equal(files.length, 1);
       expect(files).toInclude(file);
     }
 
     pipe(
-      [from.obj([file]), vfs.dest(outputBase, { sourcemaps: true }), concat(assert)],
-      done
+      [from.obj([file]), vfs.dest(outputBase, { sourcemaps: true }), concat(compare)],
+      cb
     );
   });
 
-  it('accepts the sourcemap option as a string', function(done) {
+  it('accepts the sourcemap option as a string', cb => {
     var file = new File({
       base: inputBase,
       path: inputPath,
@@ -108,18 +109,18 @@ describe('.dest()', function() {
       sourceMap: makeSourceMap()
     });
 
-    function assert(files) {
-      expect(files.length).toEqual(2);
+    function compare(files) {
+      assert.equal(files.length, 2);
       expect(files).toInclude(file);
     }
 
     pipe(
-      [from.obj([file]), vfs.dest(outputBase, { sourcemaps: '.' }), concat(assert)],
-      done
+      [from.obj([file]), vfs.dest(outputBase, { sourcemaps: '.' }), concat(compare)],
+      cb
     );
   });
 
-  it('inlines sourcemaps when option is true', function(done) {
+  it('inlines sourcemaps when option is true', cb => {
     var file = new File({
       base: inputBase,
       path: inputPath,
@@ -127,19 +128,19 @@ describe('.dest()', function() {
       sourceMap: makeSourceMap()
     });
 
-    function assert(files) {
-      expect(files.length).toEqual(1);
+    function compare(files) {
+      assert.equal(files.length, 1);
       expect(files).toInclude(file);
       expect(files[0].contents.toString()).toMatch(new RegExp(sourcemapContents));
     }
 
     pipe(
-      [from.obj([file]), vfs.dest(outputBase, { sourcemaps: true }), concat(assert)],
-      done
+      [from.obj([file]), vfs.dest(outputBase, { sourcemaps: true }), concat(compare)],
+      cb
     );
   });
 
-  it('generates an extra File when option is a string', function(done) {
+  it('generates an extra File when option is a string', cb => {
     var file = new File({
       base: inputBase,
       path: inputPath,
@@ -147,81 +148,81 @@ describe('.dest()', function() {
       sourceMap: makeSourceMap()
     });
 
-    function assert(files) {
-      expect(files.length).toEqual(2);
+    function compare(files) {
+      assert.equal(files.length, 2);
       expect(files).toInclude(file);
       expect(files[0].contents.toString()).toMatch(new RegExp('//# sourceMappingURL=test.txt.map'));
-      expect(files[1].contents).toEqual(JSON.stringify(makeSourceMap()));
+      assert.equal(files[1].contents, JSON.stringify(makeSourceMap()));
     }
 
     pipe(
-      [from.obj([file]), vfs.dest(outputBase, { sourcemaps: '.' }), concat(assert)],
-      done
+      [from.obj([file]), vfs.dest(outputBase, { sourcemaps: '.' }), concat(compare)],
+      cb
     );
   });
 
-  it('passes through writes with cwd', function(done) {
+  it('passes through writes with cwd', cb => {
     var file = new File({
       base: inputBase,
       path: inputPath,
       contents: null
     });
 
-    function assert(files) {
-      expect(files.length).toEqual(1);
+    function compare(files) {
+      assert.equal(files.length, 1);
       expect(files).toInclude(file);
-      expect(files[0].cwd).toEqual(__dirname, 'cwd should have changed');
+      assert.equal(files[0].cwd, __dirname, 'cwd should have changed');
     }
 
     pipe(
-      [from.obj([file]), vfs.dest(outputRelative, { cwd: __dirname }), concat(assert)],
-      done
+      [from.obj([file]), vfs.dest(outputRelative, { cwd: __dirname }), concat(compare)],
+      cb
     );
   });
 
-  it('passes through writes with default cwd', function(done) {
+  it('passes through writes with default cwd', cb => {
     var file = new File({
       base: inputBase,
       path: inputPath,
       contents: null
     });
 
-    function assert(files) {
-      expect(files.length).toEqual(1);
+    function compare(files) {
+      assert.equal(files.length, 1);
       expect(files).toInclude(file);
-      expect(files[0].cwd).toEqual(process.cwd(), 'cwd should not have changed');
+      assert.equal(files[0].cwd, process.cwd(), 'cwd should not have changed');
     }
 
     pipe(
-      [from.obj([file]), vfs.dest(outputBase), concat(assert)],
-      done
+      [from.obj([file]), vfs.dest(outputBase), concat(compare)],
+      cb
     );
   });
 
-  it('does not write null files', function(done) {
+  it('does not write null files', cb => {
     var file = new File({
       base: inputBase,
       path: inputPath,
       contents: null
     });
 
-    function assert(files) {
+    function compare(files) {
       var exists = fs.existsSync(outputPath);
 
-      expect(files.length).toEqual(1);
+      assert.equal(files.length, 1);
       expect(files).toInclude(file);
-      expect(files[0].base).toEqual(outputBase, 'base should have changed');
-      expect(files[0].path).toEqual(outputPath, 'path should have changed');
-      expect(exists).toEqual(false);
+      assert.equal(files[0].base, outputBase, 'base should have changed');
+      assert.equal(files[0].path, outputPath, 'path should have changed');
+      assert.equal(exists, false);
     }
 
     pipe(
-      [from.obj([file]), vfs.dest(outputBase), concat(assert)],
-      done
+      [from.obj([file]), vfs.dest(outputBase), concat(compare)],
+      cb
     );
   });
 
-  it('writes buffer files to the right folder with relative cwd', function(done) {
+  it('writes buffer files to the right folder with relative cwd', cb => {
     var cwd = path.relative(process.cwd(), __dirname);
 
     var file = new File({
@@ -230,24 +231,24 @@ describe('.dest()', function() {
       contents: Buffer.from(contents)
     });
 
-    function assert(files) {
+    function compare(files) {
       var outputContents = fs.readFileSync(outputPath, 'utf8');
 
-      expect(files.length).toEqual(1);
+      assert.equal(files.length, 1);
       expect(files).toInclude(file);
-      expect(files[0].cwd).toEqual(__dirname, 'cwd should have changed');
-      expect(files[0].base).toEqual(outputBase, 'base should have changed');
-      expect(files[0].path).toEqual(outputPath, 'path should have changed');
-      expect(outputContents).toEqual(contents);
+      assert.equal(files[0].cwd, __dirname, 'cwd should have changed');
+      assert.equal(files[0].base, outputBase, 'base should have changed');
+      assert.equal(files[0].path, outputPath, 'path should have changed');
+      assert.equal(outputContents, contents);
     }
 
     pipe(
-      [from.obj([file]), vfs.dest(outputRelative, { cwd: cwd }), concat(assert)],
-      done
+      [from.obj([file]), vfs.dest(outputRelative, { cwd: cwd }), concat(compare)],
+      cb
     );
   });
 
-  it('writes buffer files to the right folder with function and relative cwd', function(done) {
+  it('writes buffer files to the right folder with function and relative cwd', cb => {
     var cwd = path.relative(process.cwd(), __dirname);
 
     var file = new File({
@@ -257,75 +258,75 @@ describe('.dest()', function() {
     });
 
     function outputFn(f) {
-      expect(f).toExist();
-      expect(f).toExist(file);
+      assert(f);
+      assert(file);
       return outputRelative;
     }
 
-    function assert(files) {
+    function compare(files) {
       var outputContents = fs.readFileSync(outputPath, 'utf8');
 
-      expect(files.length).toEqual(1);
+      assert.equal(files.length, 1);
       expect(files).toInclude(file);
-      expect(files[0].cwd).toEqual(__dirname, 'cwd should have changed');
-      expect(files[0].base).toEqual(outputBase, 'base should have changed');
-      expect(files[0].path).toEqual(outputPath, 'path should have changed');
-      expect(outputContents).toEqual(contents);
+      assert.equal(files[0].cwd, __dirname, 'cwd should have changed');
+      assert.equal(files[0].base, outputBase, 'base should have changed');
+      assert.equal(files[0].path, outputPath, 'path should have changed');
+      assert.equal(outputContents, contents);
     }
 
     pipe(
-      [from.obj([file]), vfs.dest(outputFn, { cwd: cwd }), concat(assert)],
-      done
+      [from.obj([file]), vfs.dest(outputFn, { cwd: cwd }), concat(compare)],
+      cb
     );
   });
 
-  it('writes buffer files to the right folder', function(done) {
+  it('writes buffer files to the right folder', cb => {
     var file = new File({
       base: inputBase,
       path: inputPath,
       contents: Buffer.from(contents)
     });
 
-    function assert(files) {
+    function compare(files) {
       var outputContents = fs.readFileSync(outputPath, 'utf8');
 
-      expect(files.length).toEqual(1);
+      assert.equal(files.length, 1);
       expect(files).toInclude(file);
-      expect(files[0].base).toEqual(outputBase, 'base should have changed');
-      expect(files[0].path).toEqual(outputPath, 'path should have changed');
-      expect(outputContents).toEqual(contents);
+      assert.equal(files[0].base, outputBase, 'base should have changed');
+      assert.equal(files[0].path, outputPath, 'path should have changed');
+      assert.equal(outputContents, contents);
     }
 
     pipe(
-      [from.obj([file]), vfs.dest(outputBase), concat(assert)],
-      done
+      [from.obj([file]), vfs.dest(outputBase), concat(compare)],
+      cb
     );
   });
 
-  it('writes streaming files to the right folder', function(done) {
+  it('writes streaming files to the right folder', cb => {
     var file = new File({
       base: inputBase,
       path: inputPath,
       contents: from([contents])
     });
 
-    function assert(files) {
+    function compare(files) {
       var outputContents = fs.readFileSync(outputPath, 'utf8');
 
-      expect(files.length).toEqual(1);
+      assert.equal(files.length, 1);
       expect(files).toInclude(file);
-      expect(files[0].base).toEqual(outputBase, 'base should have changed');
-      expect(files[0].path).toEqual(outputPath, 'path should have changed');
-      expect(outputContents).toEqual(contents);
+      assert.equal(files[0].base, outputBase, 'base should have changed');
+      assert.equal(files[0].path, outputPath, 'path should have changed');
+      assert.equal(outputContents, contents);
     }
 
     pipe(
-      [from.obj([file]), vfs.dest(outputBase), concat(assert)],
-      done
+      [from.obj([file]), vfs.dest(outputBase), concat(compare)],
+      cb
     );
   });
 
-  it('writes large streaming files to the right folder', function(done) {
+  it('writes large streaming files to the right folder', cb => {
     var size = 40000;
 
     var file = new File({
@@ -334,21 +335,21 @@ describe('.dest()', function() {
       contents: string(size)
     });
 
-    function assert(files) {
+    function compare(files) {
       var stats = fs.lstatSync(outputPath);
 
-      expect(files.length).toEqual(1);
+      assert.equal(files.length, 1);
       expect(files).toInclude(file);
-      expect(stats.size).toEqual(size);
+      assert.equal(stats.size, size);
     }
 
     pipe(
-      [from.obj([file]), vfs.dest(outputBase), concat(assert)],
-      done
+      [from.obj([file]), vfs.dest(outputBase), concat(compare)],
+      cb
     );
   });
 
-  it('writes directories to the right folder', function(done) {
+  it('writes directories to the right folder', cb => {
     var file = new File({
       base: inputBase,
       path: inputDirpath,
@@ -358,35 +359,35 @@ describe('.dest()', function() {
       }
     });
 
-    function assert(files) {
+    function compare(files) {
       var stats = fs.lstatSync(outputDirpath);
 
-      expect(files.length).toEqual(1);
+      assert.equal(files.length, 1);
       expect(files).toInclude(file);
-      expect(files[0].base).toEqual(outputBase, 'base should have changed');
+      assert.equal(files[0].base, outputBase, 'base should have changed');
       // TODO: normalize this path
-      expect(files[0].path).toEqual(outputDirpath, 'path should have changed');
-      expect(stats.isDirectory()).toEqual(true);
+      assert.equal(files[0].path, outputDirpath, 'path should have changed');
+      assert.equal(stats.isDirectory(), true);
     }
 
     pipe(
-      [from.obj([file]), vfs.dest(outputBase), concat(assert)],
-      done
+      [from.obj([file]), vfs.dest(outputBase), concat(compare)],
+      cb
     );
   });
 
-  it('allows piping multiple dests in streaming mode', function(done) {
+  it('allows piping multiple dests in streaming mode', cb => {
     var file = new File({
       base: inputBase,
       path: inputPath,
       contents: Buffer.from(contents)
     });
 
-    function assert() {
+    function compare() {
       var outputContents1 = fs.readFileSync(outputPath, 'utf8');
       var outputContents2 = fs.readFileSync(outputRenamePath, 'utf8');
-      expect(outputContents1).toEqual(contents);
-      expect(outputContents2).toEqual(contents);
+      assert.equal(outputContents1, contents);
+      assert.equal(outputContents2, contents);
     }
 
     pipe(
@@ -397,13 +398,13 @@ describe('.dest()', function() {
         rename(outputRenamePath),
         includes({ path: outputRenamePath }),
         vfs.dest(outputBase),
-        concat(assert)
+        concat(compare)
       ],
-      done
+      cb
     );
   });
 
-  it('writes new files with the default user mode', function(done) {
+  it('writes new files with the default user mode', cb => {
     var expectedMode = applyUmask('666');
 
     var file = new File({
@@ -412,28 +413,28 @@ describe('.dest()', function() {
       contents: Buffer.from(contents)
     });
 
-    function assert(files) {
-      expect(files.length).toEqual(1);
+    function compare(files) {
+      assert.equal(files.length, 1);
       expect(files).toInclude(file);
-      expect(statMode(outputPath)).toEqual(expectedMode);
+      assert.equal(statMode(outputPath), expectedMode);
     }
 
     pipe(
-      [from.obj([file]), vfs.dest(outputBase), concat(assert)],
-      done
+      [from.obj([file]), vfs.dest(outputBase), concat(compare)],
+      cb
     );
   });
 
-  it('reports i/o errors', function(done) {
+  it('reports i/o errors', cb => {
     var file = new File({
       base: inputBase,
       path: inputPath,
       contents: Buffer.from(contents)
     });
 
-    function assert(err) {
-      expect(err).toExist();
-      done();
+    function compare(err) {
+      assert(err, 'expected an error');
+      cb();
     }
 
     fs.mkdirSync(outputBase);
@@ -442,11 +443,11 @@ describe('.dest()', function() {
 
     pipe(
       [from.obj([file]), vfs.dest(outputBase)],
-      assert
+      compare
     );
   });
 
-  it('reports stat errors', function(done) {
+  it('reports stat errors', cb => {
     var expectedMode = applyUmask('722');
 
     var fstatSpy = expect.spyOn(fs, 'fstat').andCall(mockError);
@@ -460,10 +461,10 @@ describe('.dest()', function() {
       }
     });
 
-    function assert(err) {
-      expect(err).toExist();
-      expect(fstatSpy.calls.length).toEqual(1);
-      done();
+    function compare(err) {
+      assert(err, 'expected an error');
+      assert.equal(fstatSpy.calls.length, 1);
+      cb();
     }
 
     fs.mkdirSync(outputBase);
@@ -471,11 +472,11 @@ describe('.dest()', function() {
 
     pipe(
       [from.obj([file]), vfs.dest(outputBase)],
-      assert
+      compare
     );
   });
 
-  it('does not overwrite files with overwrite option set to false', function(done) {
+  it('does not overwrite files with overwrite option set to false', cb => {
     var existingContents = 'Lorem Ipsum';
 
     var file = new File({
@@ -484,11 +485,11 @@ describe('.dest()', function() {
       contents: Buffer.from(contents)
     });
 
-    function assert(files) {
+    function compare(files) {
       var outputContents = fs.readFileSync(outputPath, 'utf8');
 
-      expect(files.length).toEqual(1);
-      expect(outputContents).toEqual(existingContents);
+      assert.equal(files.length, 1);
+      assert.equal(outputContents, existingContents);
     }
 
     // Write expected file which should not be overwritten
@@ -496,12 +497,12 @@ describe('.dest()', function() {
     fs.writeFileSync(outputPath, existingContents);
 
     pipe(
-      [from.obj([file]), vfs.dest(outputBase, { overwrite: false }), concat(assert)],
-      done
+      [from.obj([file]), vfs.dest(outputBase, { overwrite: false }), concat(compare)],
+      cb
     );
   });
 
-  it('overwrites files with overwrite option set to true', function(done) {
+  it('overwrites files with overwrite option set to true', cb => {
     var existingContents = 'Lorem Ipsum';
 
     var file = new File({
@@ -510,11 +511,11 @@ describe('.dest()', function() {
       contents: Buffer.from(contents)
     });
 
-    function assert(files) {
+    function compare(files) {
       var outputContents = fs.readFileSync(outputPath, 'utf8');
 
-      expect(files.length).toEqual(1);
-      expect(outputContents).toEqual(contents);
+      assert.equal(files.length, 1);
+      assert.equal(outputContents, contents);
     }
 
     // This should be overwritten
@@ -522,12 +523,12 @@ describe('.dest()', function() {
     fs.writeFileSync(outputPath, existingContents);
 
     pipe(
-      [from.obj([file]), vfs.dest(outputBase, { overwrite: true }), concat(assert)],
-      done
+      [from.obj([file]), vfs.dest(outputBase, { overwrite: true }), concat(compare)],
+      cb
     );
   });
 
-  it('does not overwrite files with overwrite option set to a function that returns false', function(done) {
+  it('does not overwrite files with overwrite option set to a function that returns false', cb => {
     var existingContents = 'Lorem Ipsum';
 
     var file = new File({
@@ -537,15 +538,15 @@ describe('.dest()', function() {
     });
 
     function overwrite(f) {
-      expect(f).toEqual(file);
+      assert.equal(f, file);
       return false;
     }
 
-    function assert(files) {
+    function compare(files) {
       var outputContents = fs.readFileSync(outputPath, 'utf8');
 
-      expect(files.length).toEqual(1);
-      expect(outputContents).toEqual(existingContents);
+      assert.equal(files.length, 1);
+      assert.equal(outputContents, existingContents);
     }
 
     // Write expected file which should not be overwritten
@@ -553,12 +554,12 @@ describe('.dest()', function() {
     fs.writeFileSync(outputPath, existingContents);
 
     pipe(
-      [from.obj([file]), vfs.dest(outputBase, { overwrite: overwrite }), concat(assert)],
-      done
+      [from.obj([file]), vfs.dest(outputBase, { overwrite: overwrite }), concat(compare)],
+      cb
     );
   });
 
-  it('overwrites files with overwrite option set to a function that returns true', function(done) {
+  it('overwrites files with overwrite option set to a function that returns true', cb => {
     var existingContents = 'Lorem Ipsum';
 
     var file = new File({
@@ -568,15 +569,15 @@ describe('.dest()', function() {
     });
 
     function overwrite(f) {
-      expect(f).toEqual(file);
+      assert.equal(f, file);
       return true;
     }
 
-    function assert(files) {
+    function compare(files) {
       var outputContents = fs.readFileSync(outputPath, 'utf8');
 
-      expect(files.length).toEqual(1);
-      expect(outputContents).toEqual(contents);
+      assert.equal(files.length, 1);
+      assert.equal(outputContents, contents);
     }
 
     // This should be overwritten
@@ -584,12 +585,12 @@ describe('.dest()', function() {
     fs.writeFileSync(outputPath, existingContents);
 
     pipe(
-      [from.obj([file]), vfs.dest(outputBase, { overwrite: overwrite }), concat(assert)],
-      done
+      [from.obj([file]), vfs.dest(outputBase, { overwrite: overwrite }), concat(compare)],
+      cb
     );
   });
 
-  it('appends content with append option set to true', function(done) {
+  it('appends content with append option set to true', cb => {
     var existingContents = 'Lorem Ipsum';
 
     var file = new File({
@@ -598,11 +599,11 @@ describe('.dest()', function() {
       contents: Buffer.from(contents)
     });
 
-    function assert(files) {
+    function compare(files) {
       var outputContents = fs.readFileSync(outputPath, 'utf8');
 
-      expect(files.length).toEqual(1);
-      expect(outputContents).toEqual(existingContents + contents);
+      assert.equal(files.length, 1);
+      assert.equal(outputContents, existingContents + contents);
     }
 
     // This should be overwritten
@@ -610,12 +611,12 @@ describe('.dest()', function() {
     fs.writeFileSync(outputPath, existingContents);
 
     pipe(
-      [from.obj([file]), vfs.dest(outputBase, { append: true }), concat(assert)],
-      done
+      [from.obj([file]), vfs.dest(outputBase, { append: true }), concat(compare)],
+      cb
     );
   });
 
-  it('appends content with append option set to a function that returns true', function(done) {
+  it('appends content with append option set to a function that returns true', cb => {
     var existingContents = 'Lorem Ipsum';
 
     var file = new File({
@@ -625,15 +626,15 @@ describe('.dest()', function() {
     });
 
     function append(f) {
-      expect(f).toEqual(file);
+      assert.equal(f, file);
       return true;
     }
 
-    function assert(files) {
+    function compare(files) {
       var outputContents = fs.readFileSync(outputPath, 'utf8');
 
-      expect(files.length).toEqual(1);
-      expect(outputContents).toEqual(existingContents + contents);
+      assert.equal(files.length, 1);
+      assert.equal(outputContents, existingContents + contents);
     }
 
     // This should be overwritten
@@ -641,15 +642,15 @@ describe('.dest()', function() {
     fs.writeFileSync(outputPath, existingContents);
 
     pipe(
-      [from.obj([file]), vfs.dest(outputBase, { append: append }), concat(assert)],
-      done
+      [from.obj([file]), vfs.dest(outputBase, { append: append }), concat(compare)],
+      cb
     );
   });
 
-  it('emits a finish event', function(done) {
+  it('emits a finish event', cb => {
     var destStream = vfs.dest(outputBase);
 
-    destStream.once('finish', done);
+    destStream.once('finish', cb);
 
     var file = new File({
       base: inputBase,
@@ -660,7 +661,7 @@ describe('.dest()', function() {
     pipe([from.obj([file]), destStream]);
   });
 
-  it('does not get clogged by highWaterMark', function(done) {
+  it('does not get clogged by highWaterMark', cb => {
     var expectedCount = 17;
     var highwatermarkFiles = [];
     for (var idx = 0; idx < expectedCount; idx++) {
@@ -680,11 +681,11 @@ describe('.dest()', function() {
         // So concat-stream cannot be used
         vfs.dest(outputBase)
       ],
-      done
+      cb
     );
   });
 
-  it('allows backpressure when piped to another, slower stream', function(done) {
+  it('allows backpressure when piped to another, slower stream', function(cb) {
     this.timeout(20000);
 
     var expectedCount = 24;
@@ -700,11 +701,11 @@ describe('.dest()', function() {
 
     pipe(
       [from.obj(highwatermarkFiles), count(expectedCount), vfs.dest(outputBase), slowCount(expectedCount)],
-      done
+      cb
     );
   });
 
-  it.only('respects readable listeners on destination stream', function(done) {
+  it('respects readable listeners on destination stream', cb => {
     var file = new File({
       base: inputBase,
       path: inputDirpath,
@@ -720,15 +721,15 @@ describe('.dest()', function() {
       }
     });
 
-    function assert(err) {
-      expect(readables).toEqual(1);
-      done(err);
+    function compare(err) {
+      assert.equal(readables, 1);
+      cb(err);
     }
 
-    pipe([from.obj([file]), destStream], assert);
+    pipe([from.obj([file]), destStream], compare);
   });
 
-  it('respects data listeners on destination stream', function(done) {
+  it('respects data listeners on destination stream', cb => {
     var file = new File({
       base: inputBase,
       path: inputDirpath,
@@ -742,15 +743,15 @@ describe('.dest()', function() {
       datas++;
     });
 
-    function assert(err) {
-      expect(datas).toEqual(1);
-      done(err);
+    function compare(err) {
+      assert.equal(datas, 1);
+      cb(err);
     }
 
-    pipe([from.obj([file]), destStream], assert);
+    pipe([from.obj([file]), destStream], compare);
   });
 
-  it('sinks the stream if all the readable event handlers are removed', function(done) {
+  it('sinks the stream if all the readable event handlers are removed', cb => {
     var expectedCount = 17;
     var highwatermarkFiles = [];
     for (var idx = 0; idx < expectedCount; idx++) {
@@ -774,7 +775,7 @@ describe('.dest()', function() {
         // So concat-stream cannot be used
         destStream
       ],
-      done
+      cb
     );
 
     process.nextTick(function() {
@@ -782,7 +783,7 @@ describe('.dest()', function() {
     });
   });
 
-  it('sinks the stream if all the data event handlers are removed', function(done) {
+  it('sinks the stream if all the data event handlers are removed', cb => {
     var expectedCount = 17;
     var highwatermarkFiles = [];
     for (var idx = 0; idx < expectedCount; idx++) {
@@ -806,7 +807,7 @@ describe('.dest()', function() {
         // So concat-stream cannot be used
         destStream
       ],
-      done
+      cb
     );
 
     process.nextTick(function() {
@@ -814,70 +815,52 @@ describe('.dest()', function() {
     });
   });
 
-  it('successfully processes files with streaming contents', function(done) {
+  it('successfully processes files with streaming contents', cb => {
     var file = new File({
       base: inputBase,
       path: inputPath,
       contents: from([contents])
     });
 
-    pipe([from.obj([file]), vfs.dest(outputBase)], done);
+    pipe([from.obj([file]), vfs.dest(outputBase)], cb);
   });
 
-  it('errors when a non-Vinyl object is emitted', function(done) {
-    var file = {};
-
-    function assert(err) {
-      expect(err).toExist();
-      expect(err.message).toEqual('Received a non-Vinyl object in `dest()`');
-      done();
-    }
-
-    pipe(
-      [from.obj([file]), vfs.dest(outputBase)],
-      assert
-    );
+  it('errors when a non-Vinyl object is emitted', cb => {
+    let file = {};
+    pipe([from.obj([file]), vfs.dest(outputBase)], err => {
+      assert(err, 'expected an error');
+      assert.equal(err.message, 'Received a non-Vinyl object in `dest()`');
+      cb();
+    });
   });
 
-  it('errors when a buffer-mode stream is piped to it', function(done) {
-    var file = Buffer.from('test');
+  it('errors when a buffer-mode stream is piped to it', cb => {
+    let file = Buffer.from('test');
 
-    function assert(err) {
-      expect(err).toExist();
-      expect(err.message).toEqual('Received a non-Vinyl object in `dest()`');
-      done();
-    }
-
-    pipe(
-      [from([file]), vfs.dest(outputBase)],
-      assert
-    );
+    pipe([from([file]), vfs.dest(outputBase)], err => {
+      assert(err, 'expected an error');
+      assert.equal(err.message, 'Received a non-Vinyl object in `dest()`');
+      cb();
+    });
   });
 
-  it('errors if we cannot mkdirp', function(done) {
-    var mkdirSpy = expect.spyOn(fs, 'mkdir').andCall(mockError);
-
-    var file = new File({
+  it('errors if we cannot mkdirp', cb => {
+    let mkdirSpy = expect.spyOn(fs, 'mkdir').andCall(mockError);
+    let file = new File({
       base: inputBase,
       path: inputPath,
       contents: null
     });
 
-    function assert(err) {
-      expect(err).toExist();
-      expect(mkdirSpy.calls.length).toEqual(1);
-      done();
-    }
-
-    pipe(
-      [from.obj([file]), vfs.dest(outputBase)],
-      assert
-    );
+    pipe([from.obj([file]), vfs.dest(outputBase)], err => {
+      assert(err, 'expected an error');
+      assert.equal(mkdirSpy.calls.length, 1);
+      cb();
+    });
   });
 
-  it('errors if vinyl object is a directory and we cannot mkdirp', function(done) {
+  it('errors if vinyl object is a directory and we cannot mkdirp', cb => {
     var ogMkdir = fs.mkdir;
-
     var mkdirSpy = expect.spyOn(fs, 'mkdir').andCall(function() {
       if (mkdirSpy.calls.length > 1) {
         mockError.apply(this, arguments);
@@ -895,20 +878,20 @@ describe('.dest()', function() {
       }
     });
 
-    function assert(err) {
-      expect(err).toExist();
-      expect(mkdirSpy.calls.length).toEqual(2);
-      done();
+    function compare(err) {
+      assert(err, 'expected an error');
+      assert.equal(mkdirSpy.calls.length, 2);
+      cb();
     }
 
     pipe(
       [from.obj([file]), vfs.dest(outputBase)],
-      assert
+      compare
     );
   });
 
   // TODO: is this correct behavior? had to adjust it
-  it('does not error if vinyl object is a directory and we cannot open it', function(done) {
+  it('does not error if vinyl object is a directory and we cannot open it', cb => {
     var file = new File({
       base: inputBase,
       path: inputDirpath,
@@ -919,18 +902,18 @@ describe('.dest()', function() {
       }
     });
 
-    function assert() {
+    function compare() {
       var exists = fs.existsSync(outputDirpath);
-      expect(exists).toEqual(true);
+      assert.equal(exists, true);
     }
 
     pipe(
-      [from.obj([file]), vfs.dest(outputBase), concat(assert)],
-      done
+      [from.obj([file]), vfs.dest(outputBase), concat(compare)],
+      cb
     );
   });
 
-  it('errors if vinyl object is a directory and open errors', function(done) {
+  it('errors if vinyl object is a directory and open errors', cb => {
     var openSpy = expect.spyOn(fs, 'open').andCall(mockError);
 
     var file = new File({
@@ -942,19 +925,19 @@ describe('.dest()', function() {
       }
     });
 
-    function assert(err) {
-      expect(err).toExist();
-      expect(openSpy.calls.length).toEqual(1);
-      done();
+    function compare(err) {
+      assert(err, 'expected an error');
+      assert.equal(openSpy.calls.length, 1);
+      cb();
     }
 
     pipe(
       [from.obj([file]), vfs.dest(outputBase)],
-      assert
+      compare
     );
   });
 
-  it('errors if content stream errors', function(done) {
+  it('errors if content stream errors', cb => {
     var contentStream = from(function(size, cb) {
       cb(new Error('mocked error'));
     });
@@ -965,18 +948,18 @@ describe('.dest()', function() {
       contents: contentStream
     });
 
-    function assert(err) {
-      expect(err).toExist();
-      done();
+    function compare(err) {
+      assert(err, 'expected an error');
+      cb();
     }
 
     pipe(
       [from.obj([file]), vfs.dest(outputBase)],
-      assert
+      compare
     );
   });
 
-  it('does not pass options on to through2', function(done) {
+  it('does not pass options on to through2', cb => {
     var file = new File({
       base: inputBase,
       path: inputPath,
@@ -986,25 +969,25 @@ describe('.dest()', function() {
     // Reference: https://github.com/gulpjs/vinyl-fs/issues/153
     var read = expect.createSpy().andReturn(false);
 
-    function assert() {
+    function compare() {
       // Called never because it's not a valid option
-      expect(read.calls.length).toEqual(0);
+      assert.equal(read.calls.length, 0);
     }
 
     pipe(
-      [from.obj([file]), vfs.dest(outputBase, { read: read }), concat(assert)],
-      done
+      [from.obj([file]), vfs.dest(outputBase, { read: read }), concat(compare)],
+      cb
     );
   });
 
-  it('does not marshall a Vinyl object with isSymbolic method', function(done) {
+  it('does not marshall a Vinyl object with isSymbolic method', cb => {
     var file = new File({
       base: outputBase,
       path: outputPath
     });
 
-    function assert(files) {
-      expect(files.length).toEqual(1);
+    function compare(files) {
+      assert.equal(files.length, 1);
       // Avoid comparing stats because they get reflected
       delete files[0].stat;
       expect(files[0]).toMatch(file);
@@ -1012,12 +995,12 @@ describe('.dest()', function() {
     }
 
     pipe(
-      [from.obj([file]), vfs.dest(outputBase), concat(assert)],
-      done
+      [from.obj([file]), vfs.dest(outputBase), concat(compare)],
+      cb
     );
   });
 
-  it('marshalls a Vinyl object without isSymbolic to a newer Vinyl', function(done) {
+  it('marshalls a Vinyl object without isSymbolic to a newer Vinyl', cb => {
     var file = new File({
       base: outputBase,
       path: outputPath
@@ -1025,8 +1008,8 @@ describe('.dest()', function() {
 
     breakPrototype(file);
 
-    function assert(files) {
-      expect(files.length).toEqual(1);
+    function compare(files) {
+      assert.equal(files.length, 1);
       // Avoid comparing stats because they get reflected
       delete files[0].stat;
       expect(files[0]).toMatch(file);
@@ -1034,8 +1017,8 @@ describe('.dest()', function() {
     }
 
     pipe(
-      [from.obj([file]), vfs.dest(outputBase), concat(assert)],
-      done
+      [from.obj([file]), vfs.dest(outputBase), concat(compare)],
+      cb
     );
   });
 });

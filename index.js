@@ -7,6 +7,9 @@
 
 'use strict';
 
+const lead = require('lead');
+const pumpify = require('pumpify');
+const toThrough = require('to-through');
 const utils = require('./utils');
 
 module.exports = options => {
@@ -55,9 +58,12 @@ module.exports = options => {
      */
 
     utils.define(app, 'src', (patterns, options) => {
-      return utils.src(patterns, { allowEmpty: true, ...options })
-        .pipe(handle(this, 'onStream'))
-        .pipe(toViews(this, options));
+      let streams = pumpify.obj([
+        utils.src(patterns, { allowEmpty: true, ...options }),
+        handle(app, 'onStream'),
+        toFiles(app, options)
+      ]);
+      return toThrough(streams);
     });
 
     /**
@@ -86,27 +92,21 @@ module.exports = options => {
      * @api public
      */
 
-    utils.define(app, 'dest', function(dest, options = {}) {
+    utils.define(app, 'dest', (dest, options = {}) => {
       if (!dest) {
         throw new TypeError('expected dest to be a string or function');
       }
 
       // ensure "dest" is added to the context before rendering
-      utils.prepareDest(this, dest, options);
-      let stream = utils.dest(dest, options);
+      utils.prepareDest(app, dest, options);
 
-      let output = utils.combine([
-        handle(this, 'preWrite'),
-        stream,
-        handle(this, 'postWrite')
+      let output = pumpify.obj([
+        handle(app, 'preWrite'),
+        utils.dest(dest, options),
+        handle(app, 'postWrite')
       ]);
 
-      output.once('end', () => {
-        output.emit('finish');
-        this.emit('end');
-      });
-
-      return output;
+      return lead(output);
     });
 
     return plugin;
@@ -122,11 +122,11 @@ function addHandlers(app, handlers) {
 }
 
 /**
- * Ensure vinyl files are assemble views, and add
- * then to a collection if specified.
+ * Make sure vinyl files are assemble files, and add
+ * them to a collection, if specified.
  */
 
-function toViews(app, options) {
+function toFiles(app, options) {
   let opts = Object.assign({ collection: null }, options);
   let name = opts.collection;
   let collection = app.collections ? name && app[name] : app;
@@ -137,8 +137,8 @@ function toViews(app, options) {
   }
 
   return utils.through.obj(async (file, enc, next) => {
-    if (!file._isFile) {
-      file = app.file(file);
+    if (!app.File.isFile(file)) {
+      file = app.file(file.path, file);
     }
 
     if (file.isNull()) {
@@ -146,7 +146,7 @@ function toViews(app, options) {
       return;
     }
 
-    if (collection && collection.isCollection) {
+    if (collection && isCollection(collection)) {
       try {
         view = await collection.set(file.path, file);
       } catch (err) {
@@ -157,23 +157,22 @@ function toViews(app, options) {
       return;
     }
 
-    view = app.file(file.path, file);
+    view = !app.File.isFile(file) ? app.file(file.path, file) : file;
 
-    try {
-      await app.handle('onLoad', view);
-    } catch (err) {
-      next(err);
-      return;
-    }
-
-    next(null, view);
+    app.handle('onLoad', view)
+      .then(() => next(null, view))
+      .catch(next);
   });
+}
+
+function isCollection(collection) {
+  return collection.files && !collection.collections;
 }
 
 function handle(app, method) {
   return utils.through.obj(async (file, enc, next) => {
-    if (!file.path && !file.isNull && !file.contents) {
-      next();
+    if (!file || (!file.path && !file.isNull && !file.contents)) {
+      next(null, file);
       return;
     }
 
@@ -187,7 +186,8 @@ function handle(app, method) {
       return;
     }
 
-    await app.handle(method, file);
-    next(null, file);
+    app.handle(method, file)
+      .then(() => next(null, file))
+      .catch(next);
   });
 }

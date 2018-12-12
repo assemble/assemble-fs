@@ -7,7 +7,9 @@ var File = require('vinyl');
 var expect = require('expect');
 var miss = require('mississippi');
 
-var vfs = require('../..');
+const App = require('templates');
+let plugin = require('../..');
+let vfs;
 
 var cleanup = require('./utils/cleanup');
 var isWindows = require('./utils/is-windows');
@@ -37,6 +39,10 @@ var contents = testConstants.contents;
 var clean = cleanup(outputBase);
 
 describe('symlink stream', function() {
+  beforeEach(() => {
+    vfs = new App();
+    vfs.use(plugin());
+  });
 
   beforeEach(clean);
   afterEach(clean);
