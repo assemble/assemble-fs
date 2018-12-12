@@ -1,7 +1,7 @@
 {
   "name": "assemble-fs",
   "description": "Light wrapper for vinyl-fs to add streams support in a way that plays nice with Assemble middleware.",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "homepage": "https://github.com/assemble/assemble-fs",
   "author": "Jon Schlinkert (https://github.com/jonschlinkert)",
   "contributors": [
